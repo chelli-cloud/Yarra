@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 from tenants.models import School, Profile, TeacherResource, DiscussionThread, ThreadReply
 from competitions.models import Event, EventCategory, CompetitionResult
 
@@ -11,6 +12,12 @@ class Command(BaseCommand):
     help = 'Seed the database with 10 schools and comprehensive sample data'
 
     def handle(self, *args, **options):
+        # Configure Site
+        Site.objects.update_or_create(
+            id=settings.SITE_ID,
+            defaults={'domain': 'yarra.pythonanywhere.com', 'name': 'Yaara Consortium'}
+        )
+
         # Create media directories if they don't exist
         resources_path = os.path.join(settings.MEDIA_ROOT, 'teacher_hub', 'resources')
         os.makedirs(resources_path, exist_ok=True)

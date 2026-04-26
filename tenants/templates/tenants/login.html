@@ -40,14 +40,25 @@
 
         <div style="display: flex; flex-direction: column; gap: 12px;">
             {% load socialaccount %}
-            <a href="{% provider_login_url 'google' %}" class="sso-button">
-                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" class="sso-icon">
-                Sign in with Google Workspace
-            </a>
-            <a href="{% provider_login_url 'microsoft' %}" class="sso-button">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft" class="sso-icon">
-                Sign in with Microsoft AD
-            </a>
+            {% get_providers as socialaccount_providers %}
+            
+            {% if socialaccount_providers %}
+                {% for provider in socialaccount_providers %}
+                    <a href="{% provider_login_url provider.id %}" class="sso-button">
+                        {% if provider.id == 'google' %}
+                            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" class="sso-icon">
+                            Sign in with Google Workspace
+                        {% elif provider.id == 'microsoft' %}
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft" class="sso-icon">
+                            Sign in with Microsoft AD
+                        {% else %}
+                            Sign in with {{ provider.name }}
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            {% else %}
+                <p class="muted" style="text-align: center; font-size: 0.85rem;">SSO not configured. Please contact Super Admin.</p>
+            {% endif %}
         </div>
         
         <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
