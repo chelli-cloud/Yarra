@@ -67,20 +67,11 @@ class Profile(models.Model):
     campus = models.CharField(max_length=100, blank=True)
     grade = models.CharField(max_length=50, blank=True, help_text="e.g. Grade 10")
     section = models.CharField(max_length=50, blank=True, help_text="e.g. Section A")
-    registration_no = models.CharField(max_length=50, blank=True)
     admission_date = models.DateField(null=True, blank=True)
     
     # Address
     permanent_address = models.TextField(blank=True)
     current_address = models.TextField(blank=True)
-    
-    # Parent/Guardian Details
-    father_name = models.CharField(max_length=100, blank=True)
-    father_contact = models.CharField(max_length=15, blank=True)
-    mother_name = models.CharField(max_length=100, blank=True)
-    mother_contact = models.CharField(max_length=15, blank=True)
-    guardian_name = models.CharField(max_length=100, blank=True)
-    guardian_contact = models.CharField(max_length=15, blank=True)
 
     class Meta:
         indexes = [

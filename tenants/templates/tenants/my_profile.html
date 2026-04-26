@@ -22,7 +22,6 @@
                         {% endif %}
                     </div>
                     <h2 style="font-size: 1.4rem; margin-bottom: 4px;">{{ profile.user.get_full_name|default:profile.user.username }}</h2>
-                    <div class="muted" style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin-bottom: 20px;">Regn No. {{ profile.registration_no|default:"PENDING" }}</div>
                     
                     <div style="margin-top: 20px;">
                         <label for="profile_picture" class="button secondary" style="width: 100%; font-size: 0.85rem; cursor: pointer;">
@@ -33,6 +32,7 @@
                 </div>
 
                 <div class="card" style="padding: 0; overflow: hidden;">
+                    {% if profile.role == 'student' %}
                     <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
                         <span class="muted" style="font-size: 0.8rem; font-weight: 700;">CAMPUS</span>
                         <span style="font-weight: 600;">{{ profile.campus|default:"Main Campus" }}</span>
@@ -45,6 +45,7 @@
                         <span class="muted" style="font-size: 0.8rem; font-weight: 700;">SECTION</span>
                         <span style="font-weight: 600;">{{ profile.section|default:"A" }}</span>
                     </div>
+                    {% endif %}
                     <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
                         <span class="muted" style="font-size: 0.8rem; font-weight: 700;">ROLE</span>
                         <span style="font-weight: 600;">{{ profile.get_role_display }}</span>
@@ -58,6 +59,7 @@
 
             <!-- Main Content -->
             <div style="display: flex; flex-direction: column; gap: 32px;">
+                {% if profile.role == 'student' %}
                 <!-- Academic Information -->
                 <div class="card" style="padding: 0; overflow: hidden;">
                     <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Academic Information</div>
@@ -66,10 +68,6 @@
                             <div class="form-group">
                                 <label class="label">Campus</label>
                                 <input class="input" type="text" name="campus" value="{{ profile.campus }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="label">Registration No.</label>
-                                <input class="input" type="text" name="registration_no" value="{{ profile.registration_no }}" readonly style="background: var(--bg-body);">
                             </div>
                             <div class="form-group">
                                 <label class="label">Grade / Class</label>
@@ -86,6 +84,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
                 <!-- Basic Information -->
                 <div class="card" style="padding: 0; overflow: hidden;">
@@ -120,31 +119,6 @@
                             <div class="form-group">
                                 <label class="label">Blood Group</label>
                                 <input class="input" type="text" name="blood_group" value="{{ profile.blood_group }}" placeholder="e.g. O+">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Parents and Guardian -->
-                <div class="card" style="padding: 0; overflow: hidden;">
-                    <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Parents and Guardian</div>
-                    <div style="padding: 32px;">
-                        <div class="grid two">
-                            <div class="form-group">
-                                <label class="label">Father's Name</label>
-                                <input class="input" type="text" name="father_name" value="{{ profile.father_name }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="label">Father's Contact</label>
-                                <input class="input" type="text" name="father_contact" value="{{ profile.father_contact }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="label">Mother's Name</label>
-                                <input class="input" type="text" name="mother_name" value="{{ profile.mother_name }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="label">Mother's Contact</label>
-                                <input class="input" type="text" name="mother_contact" value="{{ profile.mother_contact }}">
                             </div>
                         </div>
                     </div>

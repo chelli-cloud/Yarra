@@ -38,16 +38,13 @@ def my_profile(request):
         profile.extra_curricular = request.POST.get('extra_curricular', '')
         profile.permanent_address = request.POST.get('permanent_address', '')
         profile.current_address = request.POST.get('current_address', '')
-        profile.father_name = request.POST.get('father_name', '')
-        profile.father_contact = request.POST.get('father_contact', '')
-        profile.mother_name = request.POST.get('mother_name', '')
-        profile.mother_contact = request.POST.get('mother_contact', '')
         
-        # New school fields
-        profile.grade = request.POST.get('grade', '')
-        profile.section = request.POST.get('section', '')
-        profile.campus = request.POST.get('campus', '')
-        profile.admission_date = request.POST.get('admission_date') or None
+        # Academic details (only updated if student)
+        if profile.role == 'student':
+            profile.grade = request.POST.get('grade', '')
+            profile.section = request.POST.get('section', '')
+            profile.campus = request.POST.get('campus', '')
+            profile.admission_date = request.POST.get('admission_date') or None
         
         if request.FILES.get('profile_picture'):
             profile.profile_picture = request.FILES['profile_picture']
