@@ -1,0 +1,110 @@
+from django.db import models
+from django.contrib.auth.models import User
+from django.urls import reverse
+from tenants.models import School
+
+
+class EventCategory(models.TextChoices):
+    YARRA_ACTION = 'action', 'Yarra Action'
+    YARRA_SPOTLIGHT = 'spotlight', 'Yarra Spotlight'
+    YARRA_ACTIVE = 'active', 'Yarra Active'
+    OPPORTUNITY = 'opportunity', 'Opportunity'
+
+
+class Event(models.Model):
+    """
+    Represents a school competition/event in one of three tracks:
+    Yarra Action (sports), Yarra Spotlight (arts/culture), Yarra Active (ongoing programs).
+    """
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='events')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_events')
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    category = models.CharField(max_length=20, choices=EventCategory.choices)
+
+    # Actionables
+    registration_link = models.URLField(help_text="Google Form URL for registration")
+    brochure = models.FileField(upload_to='competitions/brochures/', blank=True, null=True)
+    payment_qr = models.FileField(upload_to='competitions/payment_qr/', blank=True, null=True,
+                                  help_text="UPI QR code for payment")
+    razorpay_payment_link = models.URLField(blank=True, help_text="Razorpay payment page URL (optional)")
+
+    # Post-event data
+    winners = models.TextField(blank=True, help_text="Finalist/winner details")
+    winning_resources = models.FileField(upload_to='competitions/winners/', blank=True, null=True,
+                                         help_text="Photos, PDFs of winning entries")
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['category', 'is_active']),
+            models.Index(fields=['school', 'is_active']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.get_category_display()})"
+
+    def get_absolute_url(self):
+        return reverse('event_detail', args=[self.pk])
+
+
+class PaymentStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    VERIFIED = 'verified', 'Verified'
+    FAILED = 'failed', 'Failed'
+
+
+class StudentRegistration(models.Model):
+    """
+    Tracks student registration for an event with payment verification.
+    """
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_registrations')
+
+    # Razorpay payment tracking
+    razorpay_payment_id = models.CharField(max_length=50, blank=True)
+    razorpay_signature = models.CharField(max_length=200, blank=True)
+    razorpay_order_id = models.CharField(max_length=50, blank=True)
+
+    payment_status = models.CharField(max_length=20, choices=PaymentStatus.choices, default='pending')
+    payment_screenshot = models.FileField(upload_to='competitions/payment_screenshots/', blank=True, null=True)
+
+    registered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('event', 'student')
+        ordering = ['-registered_at']
+        indexes = [
+            models.Index(fields=['event', 'payment_status']),
+            models.Index(fields=['student', 'payment_status']),
+        ]
+
+    def __str__(self):
+        return f"{self.student.username} - {self.event.title} ({self.payment_status})"
+
+
+class CompetitionResult(models.Model):
+    """
+    Records competition results (winners/finalists) for analytics.
+    Triggers notification to School Leader when created.
+    """
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='results')
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='competition_results')
+    student_name = models.CharField(max_length=100)
+    prize = models.CharField(max_length=50, help_text="e.g., 1st Place, 2nd Place, Runner-up")
+    announced_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-announced_at']
+        indexes = [
+            models.Index(fields=['school', '-announced_at']),
+            models.Index(fields=['event', 'school']),
+        ]
+
+    def __str__(self):
+        return f"{self.student_name} - {self.prize} in {self.event.title}"

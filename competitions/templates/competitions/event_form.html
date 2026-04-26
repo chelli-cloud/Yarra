@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == 'create' %}Create Event{% else %}Edit Event{% endif %} | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>{% if mode == 'create' %}Create New Event{% else %}Edit Event{% endif %}</h1>
+    </div>
+</div>
+
+<div class="card">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Basic Info -->
+                <h2>Basic Information</h2>
+                <div style="margin-bottom: 14px;">
+                    <label for="title">Event Title</label>
+                    <input type="text" name="title" id="title"
+                           value="{{ event.title|default:'' }}" required>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label for="description">Description</label>
+                    <textarea name="description" id="description" rows="4" required>{{ event.description|default:'' }}</textarea>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label for="category">Category</label>
+                    <select name="category" id="category" required>
+                        <option value="">Select Category</option>
+                        {% for value, label in categories %}
+                        <option value="{{ value }}" {% if event.category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Registration Links -->
+                <h2 style="margin-top: 24px;">Registration</h2>
+                <div style="margin-bottom: 14px;">
+                    <label for="registration_link">Google Form Link</label>
+                    <input type="url" name="registration_link" id="registration_link"
+                           value="{{ event.registration_link|default:'' }}" required>
+                    <p class="muted">Students will be redirected to this Google Form for registration.</p>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label for="razorpay_payment_link">Razorpay Payment Link</label>
+                    <input type="url" name="razorpay_payment_link" id="razorpay_payment_link"
+                           value="{{ event.razorpay_payment_link|default:'' }}">
+                </div>
+
+                <!-- File Uploads -->
+                <h2 style="margin-top: 24px;">Files</h2>
+                <div style="margin-bottom: 14px;">
+                    <label for="brochure">Brochure/PDF</label>
+                    {% if event.brochure %}
+                    <p class="muted">Current: {{ event.brochure.name|cut:"competitions/brochures/" }}</p>
+                    {% endif %}
+                    <input type="file" name="brochure" id="brochure" accept=".pdf,.doc,.docx">
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label for="payment_qr">Payment QR Code</label>
+                    {% if event.payment_qr %}
+                    <p><a href="{{ event.payment_qr.url }}">Current uploaded payment QR</a></p>
+                    {% endif %}
+                    <input type="file" name="payment_qr" id="payment_qr">
+                </div>
+
+                <!-- Winners Section (Edit mode only) -->
+                {% if mode == 'edit' %}
+                <h2 style="margin-top: 24px;">Post-Event Results</h2>
+                <div style="margin-bottom: 14px;">
+                    <label for="winners">Winners/Finalists</label>
+                    <textarea name="winners" id="winners" rows="3">{{ event.winners|default:'' }}</textarea>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label for="winning_resources">Winning Resources</label>
+                    {% if event.winning_resources %}
+                    <p class="muted">Current: {{ event.winning_resources.name }}</p>
+                    {% endif %}
+                    <input type="file" name="winning_resources" id="winning_resources">
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <input type="checkbox" name="is_active" id="is_active"
+                           {% if event.is_active %}checked{% endif %}>
+                    <label for="is_active" style="display: inline;"> Event is active</label>
+                </div>
+                {% endif %}
+
+                <!-- Submit Buttons -->
+                <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
+                    <button type="submit">
+                        {% if mode == 'create' %}Create Event{% else %}Save Changes{% endif %}
+                    </button>
+                    <a href="{% url 'event_list' %}" class="button secondary">Cancel</a>
+                </div>
+            </form>
+</div>
+{% endblock %}

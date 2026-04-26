@@ -1,0 +1,49 @@
+from django.db import models
+
+class VendorCategory(models.TextChoices):
+    UNIFORMS = 'uniforms', 'Uniforms'
+    BOOKS_STATIONERY = 'books_stationery', 'Books & Stationery'
+    EDTECH = 'edtech', 'EdTech'
+    FURNITURE = 'furniture', 'Furniture & Fixtures'
+    TRANSPORT = 'transport', 'Transport'
+    CANTEEN = 'canteen', 'Canteen Supplies'
+    SPORTS = 'sports', 'Sports Equipment'
+    LAB_SUPPLIES = 'lab', 'Lab Supplies'
+    INFRASTRUCTURE = 'infrastructure', 'Digital Infrastructure'
+    OTHER = 'other', 'Other'
+
+class Vendor(models.Model):
+    name = models.CharField(max_length=200)
+    category = models.CharField(max_length=50, choices=VendorCategory.choices)
+    description = models.TextField()
+    contact_email = models.EmailField()
+    contact_phone = models.CharField(max_length=20, blank=True)
+    website = models.URLField(blank=True)
+    logo = models.ImageField(upload_to='vendor_logos/', blank=True, null=True)
+    consortium_offer = models.TextField(help_text="Special deal/discount for consortium members")
+    is_vetted = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class VendorPromotion(models.Model):
+    PLACEMENT_CHOICES = [
+        ('homepage', 'Homepage Banner'),
+        ('directory', 'Category Page Banner'),
+        ('sidebar', 'Sidebar Spotlight'),
+    ]
+
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='promotions')
+    title = models.CharField(max_length=200)
+    banner_image = models.ImageField(upload_to='vendor_promotions/')
+    offer_text = models.TextField()
+    cta_link = models.URLField()
+    placement = models.CharField(max_length=20, choices=PLACEMENT_CHOICES)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_approved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.vendor.name} - {self.title}"

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Complete Payment | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Complete Payment</h1>
+        <p class="muted">Secure registration for {{ event.title }}</p>
+    </div>
+    <a href="{% url 'event_detail' event.pk %}" class="button secondary">Back to Event</a>
+</div>
+
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <div style="text-align: center; margin-bottom: 32px;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">💳</div>
+            <h2 style="margin-bottom: 8px;">Registration Payment</h2>
+            <p class="muted">{{ event.title }}</p>
+        </div>
+
+        <div style="background: var(--primary-light); border-radius: var(--radius-md); padding: 24px; margin-bottom: 32px; border: 1px solid rgba(59, 130, 246, 0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span class="muted" style="font-weight: 600;">Event Fee</span>
+                <span style="font-weight: 700; font-size: 1.25rem;">₹{{ amount_rupees|floatformat:2 }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(59, 130, 246, 0.1); pt-12; margin-top: 12px; padding-top: 12px;">
+                <span style="font-weight: 700;">Total Amount</span>
+                <span style="font-weight: 800; font-size: 1.5rem; color: var(--primary);">₹{{ amount_rupees|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <form id="payment-form" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="razorpay_order_id" value="{{ order_id }}">
+
+            <div id="razorpay-button-container" style="min-height: 45px;">
+                <!-- Razorpay button will appear here -->
+            </div>
+
+            <div style="margin-top: 24px; text-align: center;">
+                <p class="muted" style="font-size: 0.85rem;">
+                    🔒 Secure payment processed by Razorpay. Your data is protected.
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Razorpay Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    var options = {
+        "key": "{{ razorpay_key_id }}",
+        "amount": {{ amount }},
+        "currency": "INR",
+        "name": "Yarra Competitions",
+        "description": "Event Registration Payment",
+        "order_id": "{{ order_id }}",
+        "handler": function (response) {
+            // Payment successful - verify on server
+            fetch("{% url 'verify_payment' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: new URLSearchParams({
+                    'razorpay_payment_id': response.razorpay_payment_id,
+                    'razorpay_signature': response.razorpay_signature,
+                    'razorpay_order_id': response.razorpay_order_id
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert('Payment verification failed: ' + data.message);
+                }
+            })
+            .catch(err => {
+                alert('Error: ' + err);
+            });
+        },
+        "prefill": {
+            "name": "{{ request.user.get_full_name|default:request.user.username }}",
+            "email": "{{ request.user.email }}",
+        },
+        "theme": {
+            "color": "#0d6efd"
+        }
+    };
+    var rzp1 = new Razorpay(options);
+    rzp1.open();
+</script>
+{% endblock %}

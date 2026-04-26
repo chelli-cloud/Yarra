@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ school.name }} | Yarra{% endblock %}
+
+{% block content %}
+<div class="card" style="padding: 0; overflow: hidden; margin-bottom: 32px; border: none; box-shadow: var(--shadow-lg);">
+    <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); padding: 60px 40px; color: white; text-align: center; position: relative;">
+        <div style="position: relative; z-index: 2;">
+            {% if school.logo %}
+                <img src="{{ school.logo.url }}" alt="Logo" style="height: 100px; width: 100px; object-fit: contain; background: white; padding: 10px; border-radius: 20px; margin-bottom: 24px; box-shadow: var(--shadow-md);">
+            {% else %}
+                <div style="height: 100px; width: 100px; background: rgba(255,255,255,0.2); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 24px;">🎓</div>
+            {% endif %}
+            <h1 style="color: white; font-size: 3rem; margin-bottom: 8px;">{{ school.name }}</h1>
+            <p style="font-size: 1.25rem; opacity: 0.9;">{{ school.location|default:"A Proud Member of the Yarra School Network" }}</p>
+        </div>
+        <!-- Decorative background elements -->
+        <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+        <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border);">
+        <div style="background: white; padding: 24px; text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">1.2k+</div>
+            <div class="muted" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Students</div>
+        </div>
+        <div style="background: white; padding: 24px; text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">85+</div>
+            <div class="muted" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Teachers</div>
+        </div>
+        <div style="background: white; padding: 24px; text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">24</div>
+            <div class="muted" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Competitions</div>
+        </div>
+        <div style="background: white; padding: 24px; text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">98%</div>
+            <div class="muted" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Satisfaction</div>
+        </div>
+    </div>
+</div>
+
+<div class="grid" style="grid-template-columns: 2fr 1fr;">
+    <div style="display: flex; flex-direction: column; gap: 32px;">
+        <div class="card">
+            <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">🏫</span> About Our School
+            </h2>
+            <div style="font-size: 1.1rem; line-height: 1.8; color: #475569;">
+                <p>Welcome to <strong>{{ school.name }}</strong>. We are committed to providing a holistic and future-ready education. Our curriculum focuses on academic excellence, creative expression, and physical development.</p>
+            </div>
+            
+            <div style="margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--border);">
+                <h3 style="font-size: 1rem; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Key Offerings</h3>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    {% if school.key_offerings %}
+                        <span class="badge success" style="padding: 8px 16px; font-size: 0.85rem;">{{ school.key_offerings }}</span>
+                    {% else %}
+                        <span class="badge success" style="padding: 8px 16px; font-size: 0.85rem;">Holistic Education</span>
+                        <span class="badge success" style="padding: 8px 16px; font-size: 0.85rem;">Global Network</span>
+                        <span class="badge success" style="padding: 8px 16px; font-size: 0.85rem;">Digital Ready</span>
+                        <span class="badge success" style="padding: 8px 16px; font-size: 0.85rem;">Sports Excellence</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">📍</span> Location & Address
+            </h2>
+            <p style="font-size: 1.1rem; margin-bottom: 24px;">{{ school.address|default:"Location details not provided." }}</p>
+            <div style="height: 240px; background: #f1f5f9; border-radius: var(--radius-md); border: 1px dashed #cbd5e1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; font-weight: 600; gap: 12px;">
+                <div style="font-size: 2rem;">🗺️</div>
+                <span>Map View Integration</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 32px;">
+        <div class="card">
+            <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">📞</span> Contact Details
+            </h2>
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">✉️</div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Email Address</div>
+                        <div style="font-weight: 600;">{{ school.email|default:"Not available" }}</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">📱</div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Phone Number</div>
+                        <div style="font-weight: 600;">{{ school.phone|default:"Not available" }}</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #fffbeb; color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">👤</div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Contact Person</div>
+                        <div style="font-weight: 600;">{{ school.contact_person|default:"Admissions Office" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if can_edit %}
+        <div class="card" style="background: #fffbeb; border: 1px solid #fde68a;">
+            <h2 style="margin-bottom: 16px; color: #92400e; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">⚙️</span> Admin Panel
+            </h2>
+            <p class="muted" style="margin-bottom: 24px;">You have administrative access to update this school's public profile.</p>
+            <a href="{% url 'school_profile' %}?edit=1" class="button primary" style="width: 100%; padding: 14px;">Edit School Profile</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

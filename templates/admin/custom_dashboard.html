@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-tachometer-alt me-2"></i>{{ title }}</h2>
+        <span class="badge bg-primary">Admin Access Only</span>
+    </div>
+
+    <!-- Metrics Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase mb-2">Total Schools</h6>
+                    <h3 class="mb-0">{{ metrics.total_schools }}</h3>
+                    <small class="text-success"><i class="fas fa-check-circle me-1"></i>{{ metrics.active_schools }} Active</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase mb-2">Estimated Revenue</h6>
+                    <h3 class="mb-0">₹{{ metrics.estimated_revenue }}</h3>
+                    <small class="text-muted">From {{ metrics.total_registrations }} registrations</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase mb-2">Expiring Soon</h6>
+                    <h3 class="mb-0 text-warning">{{ metrics.expiring_soon }}</h3>
+                    <small class="text-muted">Next 30 days</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-white border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase mb-2">Vendors</h6>
+                    <h3 class="mb-0">{{ metrics.total_vendors }}</h3>
+                    <small class="text-danger">{{ metrics.pending_vendors }} Pending Approval</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Schools -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0 pt-3">
+                    <h5 class="card-title">Recent School Sign-ups</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>School Name</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for school in recent_schools %}
+                                <tr>
+                                    <td><strong>{{ school.name }}</strong></td>
+                                    <td>{{ school.location }}</td>
+                                    <td>
+                                        {% if school.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">No recent schools.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flagged Notifications / Content Moderation -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0 pt-3">
+                    <h5 class="card-title">System Alerts & Moderation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for notification in flagged_notifications %}
+                        <div class="list-group-item px-0 py-3">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 text-danger">{{ notification.title }}</h6>
+                                <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                            </div>
+                            <p class="mb-1 text-muted small">{{ notification.message }}</p>
+                            <small class="text-primary">User: {{ notification.recipient.username }}</small>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                            <p class="text-muted">No critical alerts found.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Access Denied | Yarra{% endblock %}
+
+{% block content %}
+<div style="min-height: 60vh; display: flex; align-items: center; justify-content: center;">
+    <div class="card" style="max-width: 500px; width: 100%; text-align: center; padding: 48px;">
+        <div style="font-size: 4rem; margin-bottom: 24px;">🚫</div>
+        <h1 style="margin-bottom: 16px;">Access Denied</h1>
+        <p class="muted" style="margin-bottom: 32px; font-size: 1.1rem;">{{ message|default:"You do not have permission to access this page." }}</p>
+        <div class="button-group" style="justify-content: center;">
+            <a href="{% url 'school_profile' %}" class="button primary">Go to Dashboard</a>
+            <a href="javascript:history.back()" class="button secondary">Go Back</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

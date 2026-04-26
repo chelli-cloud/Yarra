@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Competitions | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>School Competitions</h1>
+        <p class="muted">Browse Yarra Action, Yarra Spotlight, and Yarra Active events.</p>
+    </div>
+    {% if can_create_event %}
+        <a href="{% url 'event_create' %}" class="button">Create Event</a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;">
+        <a class="button {% if current_category %}secondary{% endif %}" href="{% url 'event_list' %}">All Events</a>
+        {% for value, label in categories %}
+            <a class="button {% if current_category != value %}secondary{% endif %}" href="{% url 'event_list' %}?category={{ value }}">{{ label }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+{% if events %}
+    <div class="grid three">
+        {% for event in events %}
+            <div class="card" style="margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; gap: 12px; align-items: start;">
+                    <span class="badge {% if event.category == 'action' %}error{% elif event.category == 'spotlight' %}warning{% else %}success{% endif %}">{{ event.get_category_display }}</span>
+                    {% if not event.is_active %}
+                        <span class="badge info">Inactive</span>
+                    {% endif %}
+                </div>
+                <h3 style="margin: 16px 0 8px;">{{ event.title }}</h3>
+                <p class="muted">{{ event.school.name }}</p>
+                <p>{{ event.description|truncatewords:24 }}</p>
+                <p class="muted">Created {{ event.created_at|date:"M d, Y" }}</p>
+                <div style="margin-top: 16px;">
+                    <a href="{% url 'event_detail' event.pk %}" class="button secondary">View Details</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card">
+        <p>No events found in this category.</p>
+    </div>
+{% endif %}
+
+{% if profile.role == 'school_leader' %}
+    <div style="margin-top: 20px;">
+        <a href="{% url 'sl_analytics' %}" class="button secondary">View School Analytics</a>
+    </div>
+{% endif %}
+{% endblock %}

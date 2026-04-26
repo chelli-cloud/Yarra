@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Dashboard | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Review Dashboard</h1>
+        <p class="muted">Track Self Study, Review Visit, SIP, and Recommendations.</p>
+    </div>
+    {% if can_create_cycle %}
+        <a href="{% url 'create_review_cycle' %}" class="button">Create Review Cycle</a>
+    {% endif %}
+</div>
+
+{% if not review_cycle %}
+    <div class="card">
+        <p>No review cycle exists yet for this school.</p>
+    </div>
+{% else %}
+    <div class="card">
+        <div class="page-header">
+            <div>
+                <h2>{{ review_cycle.title }}</h2>
+                <p class="muted">
+                    {% if selected_cycle_is_active %}Active cycle{% else %}Archived cycle{% endif %}
+                    {% if review_cycle.start_date or review_cycle.end_date %}
+                        | {{ review_cycle.start_date|default:"No start date" }} to {{ review_cycle.end_date|default:"No end date" }}
+                    {% endif %}
+                </p>
+            </div>
+            {% if selected_cycle_is_active %}
+                <span class="badge success">Active</span>
+            {% endif %}
+        </div>
+
+        <div class="grid two">
+            <div class="card" style="margin-bottom: 0;">
+                <strong>Self Study</strong>
+                <p class="muted">{{ review_cycle.get_self_study_status_display }}</p>
+            </div>
+            <div class="card" style="margin-bottom: 0;">
+                <strong>Review Visit</strong>
+                <p class="muted">{{ review_cycle.get_review_visit_status_display }}</p>
+            </div>
+            <div class="card" style="margin-bottom: 0;">
+                <strong>SIP Preparation</strong>
+                <p class="muted">{{ review_cycle.get_sip_status_display }}</p>
+            </div>
+            <div class="card" style="margin-bottom: 0;">
+                <strong>Recommendations</strong>
+                <p class="muted">{{ review_cycle.get_recommendations_status_display }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        {% if is_archived_selection %}
+            <p class="muted">Archived cycles are view-only.</p>
+        {% elif can_edit_review %}
+            <p class="muted">You can update the active cycle.</p>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="grid two">
+                <div>
+                    <label for="self_study_status">Self Study Status</label>
+                    <select id="self_study_status" name="self_study_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        {% for value, label in review_status_choices %}
+                            <option value="{{ value }}" {% if review_cycle.self_study_status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="self_study_start">Self Study Start</label>
+                    <input type="date" id="self_study_start" name="self_study_start" value="{{ review_cycle.self_study_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                </div>
+                <div>
+                    <label for="self_study_end">Self Study End</label>
+                    <input type="date" id="self_study_end" name="self_study_end" value="{{ review_cycle.self_study_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                </div>
+                <div>
+                    <label for="self_study_document">SSR Document</label>
+                    <input type="file" id="self_study_document" name="self_study_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                    {% if review_cycle.self_study_document %}<p><a href="{{ review_cycle.self_study_document.url }}">Download current file</a></p>{% endif %}
+                </div>
+
+                <div>
+                    <label for="review_visit_status">Review Visit Status</label>
+                    <select id="review_visit_status" name="review_visit_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        {% for value, label in review_status_choices %}
+                            <option value="{{ value }}" {% if review_cycle.review_visit_status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="review_visit_start">Review Visit Start</label>
+                    <input type="date" id="review_visit_start" name="review_visit_start" value="{{ review_cycle.review_visit_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                </div>
+                <div>
+                    <label for="review_visit_end">Review Visit End</label>
+                    <input type="date" id="review_visit_end" name="review_visit_end" value="{{ review_cycle.review_visit_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                </div>
+                <div>
+                    <label for="review_visit_document">Observation Report</label>
+                    <input type="file" id="review_visit_document" name="review_visit_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                    {% if review_cycle.review_visit_document %}<p><a href="{{ review_cycle.review_visit_document.url }}">Download current file</a></p>{% endif %}
+                </div>
+
+                <div>
+                    <label for="sip_status">SIP Status</label>
+                    <select id="sip_status" name="sip_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        {% for value, label in review_status_choices %}
+                            <option value="{{ value }}" {% if review_cycle.sip_status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="sip_start">SIP Start</label>
+                    <input type="date" id="sip_start" name="sip_start" value="{{ review_cycle.sip_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                </div>
+                <div>
+                    <label for="sip_end">SIP End</label>
+                    <input type="date" id="sip_end" name="sip_end" value="{{ review_cycle.sip_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                </div>
+                <div>
+                    <label for="sip_document">Improvement Plan</label>
+                    <input type="file" id="sip_document" name="sip_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                    {% if review_cycle.sip_document %}<p><a href="{{ review_cycle.sip_document.url }}">Download current file</a></p>{% endif %}
+                </div>
+
+                <div>
+                    <label for="recommendations_status">Recommendations Status</label>
+                    <select id="recommendations_status" name="recommendations_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        {% for value, label in review_status_choices %}
+                            <option value="{{ value }}" {% if review_cycle.recommendations_status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="recommendations_start">Recommendations Start</label>
+                    <input type="date" id="recommendations_start" name="recommendations_start" value="{{ review_cycle.recommendations_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                </div>
+                <div>
+                    <label for="recommendations_end">Recommendations End</label>
+                    <input type="date" id="recommendations_end" name="recommendations_end" value="{{ review_cycle.recommendations_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                </div>
+                <div>
+                    <label for="recommendations_document">Final Report</label>
+                    <input type="file" id="recommendations_document" name="recommendations_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                    {% if review_cycle.recommendations_document %}<p><a href="{{ review_cycle.recommendations_document.url }}">Download current file</a></p>{% endif %}
+                </div>
+            </div>
+            {% if can_edit_review and not is_archived_selection %}
+                <div style="margin-top: 18px;">
+                    <button type="submit">Save Review Progress</button>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Past Review Archive</h2>
+        {% if archived_cycles %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cycle</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cycle in archived_cycles %}
+                        <tr>
+                            <td>{{ cycle.title }}</td>
+                            <td>{{ cycle.created_at|date:"M d, Y" }}</td>
+                            <td><a href="{% url 'review_dashboard' %}?cycle_id={{ cycle.pk }}" class="button secondary">View Archive</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="muted">No archived review cycles yet.</p>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

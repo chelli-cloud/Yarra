@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}Teachers' Hub | Yarra{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div class="page-header">
+        <div>
+            <h1>Teachers' Hub</h1>
+            <p class="muted">Professional development and resources for {{ user_school.name }}</p>
+        </div>
+    </div>
+
+    {% if can_upload %}
+    <div class="card" style="margin-bottom: 40px; border-style: dashed; border-width: 2px;">
+        <h3 style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 1.5rem;">📝</span> Post to Teachers' Hub
+        </h3>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="grid two">
+                <div style="grid-column: span 2;" class="form-group">
+                    <label class="label" for="title">Resource Title</label>
+                    <input class="input" type="text" id="title" name="title" required placeholder="e.g., Inquiry-Based Learning Workshop">
+                </div>
+                <div class="form-group">
+                    <label class="label" for="resource_type">Resource Type</label>
+                    <select name="resource_type" id="resource_type">
+                        {% for val, label in resource_type_choices %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="label" for="presenter">Presenter / Author</label>
+                    <input class="input" type="text" id="presenter" name="presenter" placeholder="e.g., Dr. Jane Smith">
+                </div>
+                <div class="form-group">
+                    <label class="label" for="session_date">Date</label>
+                    <input class="input" type="date" id="session_date" name="session_date">
+                </div>
+                <div class="form-group">
+                    <label class="label" for="session_time">Time</label>
+                    <input class="input" type="time" id="session_time" name="session_time">
+                </div>
+                <div class="form-group">
+                    <label class="label" for="duration">Duration / File Size</label>
+                    <input class="input" type="text" id="duration" name="duration" placeholder="e.g., 1h 20m or 245 KB">
+                </div>
+                <div class="form-group">
+                    <label class="label" for="capacity_max">Max Capacity</label>
+                    <input class="input" type="number" id="capacity_max" name="capacity_max" placeholder="Leave empty for unlimited">
+                </div>
+                <div class="form-group">
+                    <label class="label" for="uploaded_file">Upload Resource File</label>
+                    <input class="input" type="file" id="uploaded_file" name="uploaded_file">
+                </div>
+                <div class="form-group">
+                    <label class="label" for="meeting_link">Meeting / Registration Link</label>
+                    <input class="input" type="url" id="meeting_link" name="meeting_link" placeholder="https://...">
+                </div>
+            </div>
+            <div style="margin-top: 12px;">
+                <button type="submit" class="button primary" style="width: 100%; padding: 14px;">Post to Hub</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Upcoming Sessions -->
+    <div style="margin-bottom: 48px;">
+        <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 1.5rem;">📅</span> Upcoming PL Sessions
+        </h2>
+        {% for session in upcoming_sessions %}
+        <div class="card" style="margin-bottom: 16px; padding: 20px; display: flex; align-items: center; gap: 24px;">
+            <div style="text-align: center; min-width: 80px; padding-right: 24px; border-right: 2px solid var(--border);">
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">{{ session.session_date|date:"M" }}</div>
+                <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-main); line-height: 1;">{{ session.session_date|date:"d" }}</div>
+                <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">{{ session.session_date|date:"Y" }}</div>
+            </div>
+            <div style="flex-grow: 1;">
+                <h3 style="margin-bottom: 8px; font-size: 1.15rem;">{{ session.title }}</h3>
+                <div style="display: flex; gap: 16px; font-size: 0.9rem; color: var(--text-muted);">
+                    <span>🕒 {{ session.session_time|time:"H:i A" }}</span>
+                    <span>👥 {{ session.capacity_current }}/{{ session.capacity_max|default:"∞" }}</span>
+                    <span>👤 {{ session.presenter|default:"Staff" }}</span>
+                </div>
+            </div>
+            <a href="{{ session.registration_gform|default:session.meeting_link|default:'#' }}" class="button primary" target="_blank" style="padding: 10px 24px;">Register</a>
+        </div>
+        {% empty %}
+        <div class="card" style="text-align: center; padding: 40px;">
+            <p class="muted">No upcoming sessions scheduled.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Past Recordings -->
+    <div style="margin-bottom: 48px;">
+        <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 1.5rem;">🎥</span> Past Recordings
+        </h2>
+        <div class="grid one">
+            {% for recording in past_recordings %}
+            <div class="card" style="padding: 16px; display: flex; align-items: center; gap: 20px;">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">▶️</div>
+                <div style="flex-grow: 1;">
+                    <h3 style="font-size: 1.05rem; margin-bottom: 4px;">{{ recording.title }}</h3>
+                    <div class="muted" style="font-size: 0.85rem;">{{ recording.session_date|date:"M d, Y" }} • {{ recording.duration|default:"1h" }}</div>
+                </div>
+                {% if recording.meeting_link %}
+                <a href="{{ recording.meeting_link }}" target="_blank" class="button secondary" style="padding: 8px 16px;">Watch</a>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="card" style="text-align: center; padding: 40px;">
+                <p class="muted">No recordings available.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Resources -->
+    <div style="margin-bottom: 48px;">
+        <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 1.5rem;">📚</span> Educational Resources
+        </h2>
+        <div class="grid one">
+            {% for doc in resource_documents %}
+            <div class="card" style="padding: 16px; display: flex; align-items: center; gap: 20px;">
+                {% if doc.uploaded_file %}
+                    {% with ext=doc.uploaded_file.name|lower|slice:'-4:' %}
+                    <div style="width: 48px; height: 48px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; font-size: 0.65rem;
+                        {% if ext == 'docx' %}background: #eff6ff; color: #2563eb;
+                        {% elif ext == '.pdf' or doc.uploaded_file.name|lower|slice:'-3:' == 'pdf' %}background: #fef2f2; color: #dc2626;
+                        {% elif ext == 'xlsx' %}background: #f0fdf4; color: #166534;
+                        {% else %}background: #f8fafc; color: #64748b;{% endif %}">
+                        {% if ext == 'docx' %}DOCX
+                        {% elif ext == '.pdf' or doc.uploaded_file.name|lower|slice:'-3:' == 'pdf' %}PDF
+                        {% elif ext == 'xlsx' %}XLSX
+                        {% else %}FILE{% endif %}
+                    </div>
+                    {% endwith %}
+                {% else %}
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: #f8fafc; color: #64748b; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.65rem;">
+                        LINK
+                    </div>
+                {% endif %}
+                <div style="flex-grow: 1;">
+                    <h3 style="font-size: 1.05rem; margin-bottom: 4px;">{{ doc.title }}</h3>
+                    <div class="muted" style="font-size: 0.85rem;">Resource • {{ doc.duration|default:"245 KB" }}</div>
+                </div>
+                {% if doc.uploaded_file %}
+                <a href="{{ doc.uploaded_file.url }}" download class="button secondary" style="padding: 8px 16px;">Download</a>
+                {% elif doc.meeting_link %}
+                <a href="{{ doc.meeting_link }}" target="_blank" class="button secondary" style="padding: 8px 16px;">Open Link</a>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="card" style="text-align: center; padding: 40px;">
+                <p class="muted">No resource documents available.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

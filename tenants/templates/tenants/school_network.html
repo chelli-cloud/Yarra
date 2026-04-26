@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}School Network | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>School Network</h1>
+        <p class="muted">Global directory of schools connected through the Yarra ecosystem.</p>
+    </div>
+</div>
+
+<div class="grid three">
+    {% for s in schools %}
+        <div class="card" style="display: flex; flex-direction: column; align-items: center; text-align: center; transition: var(--transition);">
+            <div style="height: 120px; width: 100%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; background: var(--primary-light); border-radius: var(--radius-md);">
+                {% if s.logo %}
+                    <img src="{{ s.logo.url }}" alt="{{ s.name }} Logo" style="max-height: 80px; max-width: 80%; object-fit: contain;">
+                {% else %}
+                    <div style="width: 70px; height: 70px; background: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--primary); font-weight: 800; box-shadow: var(--shadow-sm);">
+                        {{ s.name|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <h3 style="margin-bottom: 8px; font-size: 1.2rem;">{{ s.name }}</h3>
+            <div style="margin-bottom: 16px;">
+                <span class="badge info">{{ s.location|default:"Global Network" }}</span>
+            </div>
+            
+            <div style="flex-grow: 1; margin-bottom: 24px; font-size: 0.9rem; line-height: 1.6;">
+                <p class="muted" style="margin: 0;"><strong>Specialties:</strong></p>
+                <p style="margin: 4px 0 0;">{{ s.key_offerings|truncatewords:12|default:"General Education, Holistic Development" }}</p>
+            </div>
+
+            <div style="width: 100%; padding-top: 20px; border-top: 1px solid var(--border);">
+                {% if s.pk == user_school.pk %}
+                    <a href="{% url 'school_profile' %}" class="button primary" style="width: 100%;">My School Profile</a>
+                {% else %}
+                    <span class="muted" style="font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <span style="font-size: 1rem;">🔒</span> Private Profile
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    {% empty %}
+        <div class="card" style="grid-column: span 3; text-align: center; padding: 60px;">
+            <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.3;">🌐</div>
+            <p class="muted">The school directory is currently empty.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Registration Confirmed | Yarra{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Registration Confirmation</h1>
+    <p><strong>{{ event.title }}</strong></p>
+    <p>Your registration has been recorded.</p>
+    <p>
+        Payment status:
+        <span class="badge {% if registration.payment_status == 'verified' %}success{% elif registration.payment_status == 'failed' %}error{% else %}warning{% endif %}">
+            {{ registration.get_payment_status_display }}
+        </span>
+    </p>
+    <p class="muted">Submitted on {{ registration.registered_at|date:"M d, Y H:i" }}</p>
+    {% if registration.payment_screenshot %}
+        <p><a href="{{ registration.payment_screenshot.url }}">View uploaded payment proof</a></p>
+    {% endif %}
+    <div style="margin-top: 18px;">
+        <a href="{% url 'event_detail' event.pk %}" class="button secondary">Back to Event</a>
+    </div>
+</div>
+{% endblock %}

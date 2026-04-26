@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ event.title }} | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <a href="{% url 'event_list' %}" class="button secondary">Back to Events</a>
+</div>
+
+<div class="grid two">
+    <div>
+
+            <!-- Event Header -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; gap: 12px; align-items: start;">
+                    <span class="badge {% if event.category == 'action' %}error{% elif event.category == 'spotlight' %}warning{% else %}success{% endif %}">
+                        {{ event.get_category_display }}
+                    </span>
+                    <span class="muted">{{ event.created_at|date:"F d, Y" }}</span>
+                </div>
+                <h1 style="margin: 16px 0 8px;">{{ event.title }}</h1>
+                <p class="muted">{{ event.school.name }}{% if event.created_by %} | Created by {{ event.created_by.username }}{% endif %}</p>
+                <div>{{ event.description|linebreaks }}</div>
+            </div>
+
+            <!-- Registration & Payment -->
+            <div class="card">
+                <h2>Registration and Payment</h2>
+                    {% if registration %}
+                    <p><span class="badge {% if registration.payment_status == 'verified' %}success{% elif registration.payment_status == 'failed' %}error{% else %}warning{% endif %}">{{ registration.get_payment_status_display }}</span></p>
+                    <p>You are registered for this event.</p>
+                    <p class="muted">Registered on {{ registration.registered_at|date:"M d, Y H:i" }}</p>
+                    {% if registration.payment_screenshot %}
+                    <p><a href="{{ registration.payment_screenshot.url }}">View uploaded payment proof</a></p>
+                    {% endif %}
+                    {% else %}
+                    <div class="grid two">
+                        <div class="card" style="margin-bottom: 0;">
+                            <h6>Step 1: Registration</h6>
+                            <p class="muted">Fill out the Google Form to register</p>
+                            {% if profile.role == 'student' %}
+                            <a href="{{ event.registration_link }}" target="_blank" rel="noopener" class="button secondary">
+                                Open Registration Form
+                            </a>
+                            {% else %}
+                            <p class="muted">Only students can register</p>
+                            {% endif %}
+                        </div>
+                        <div class="card" style="margin-bottom: 0;">
+                            <h6>Step 2: Payment</h6>
+                            {% if event.payment_qr %}
+                            <p><a href="{{ event.payment_qr.url }}">Open payment QR file</a></p>
+                            {% endif %}
+                            {% if event.razorpay_payment_link %}
+                            <a href="{{ event.razorpay_payment_link }}" target="_blank" rel="noopener" class="button secondary">
+                                Pay with Razorpay
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if profile.role == 'student' %}
+                    <form method="post" enctype="multipart/form-data" action="{% url 'register_for_event' event.pk %}" style="margin-top: 18px;">
+                        {% csrf_token %}
+                        <label for="payment_screenshot">Payment screenshot or proof</label>
+                        <input type="file" id="payment_screenshot" name="payment_screenshot">
+                        <div style="margin-top: 14px;">
+                            <button type="submit">Submit Registration</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                    {% endif %}
+            </div>
+
+            <!-- Downloads -->
+            {% if event.brochure %}
+            <div class="card">
+                    <a href="{{ event.brochure.url }}" class="button secondary" download>
+                        Download Brochure
+                    </a>
+            </div>
+            {% endif %}
+
+            <!-- Winners Section -->
+            {% if event.winners or event.winning_resources %}
+            <div class="card">
+                    <h2>Winners and Results</h2>
+                    {% if event.winners %}
+                    <div>{{ event.winners|linebreaks }}</div>
+                    {% endif %}
+                    {% if event.results.all %}
+                    <table>
+                        <thead><tr><th>Student</th><th>Prize</th><th>School</th></tr></thead>
+                        <tbody>
+                            {% for result in event.results.all %}
+                            <tr><td>{{ result.student_name }}</td><td>{{ result.prize }}</td><td>{{ result.school.name }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                    {% if event.winning_resources %}
+                    <a href="{{ event.winning_resources.url }}" class="button secondary" download>
+                        Download Winning Entries
+                    </a>
+                    {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        <div>
+            {% if can_edit %}
+            <div class="card">
+                    <a href="{% url 'event_edit' event.pk %}" class="button">
+                        Edit Event
+                    </a>
+            </div>
+            {% endif %}
+
+            <!-- Add Result Form for authorized users -->
+            {% if can_edit %}
+            <div class="card">
+                    <h2>Add Competition Result</h2>
+                    <form method="POST" action="{% url 'create_competition_result' event.pk %}">
+                        {% csrf_token %}
+                        <div style="margin-bottom: 12px;">
+                            <label for="student_name">Student Name</label>
+                            <input type="text" id="student_name" name="student_name" required>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label for="prize">Prize</label>
+                            <input type="text" id="prize" name="prize" required>
+                        </div>
+                        <button type="submit">
+                            Add Result
+                        </button>
+                    </form>
+            </div>
+            {% endif %}
+
+            <!-- Event Stats -->
+            <div class="card">
+                    <h2>Event Stats</h2>
+                    <p class="mb-1"><strong>Registrations:</strong> {{ event.registrations.count }}</p>
+                    <p class="mb-1"><strong>Results:</strong> {{ event.results.count }}</p>
+                    <p class="mb-0"><strong>Status:</strong> {% if event.is_active %}Active{% else %}Inactive{% endif %}</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

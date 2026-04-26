@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit School Profile | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Edit School Profile</h1>
+        <p class="muted">Update details for {{ school.name }}.</p>
+    </div>
+    <a href="{% url 'school_profile' %}" class="button secondary">Back to Profile</a>
+</div>
+
+<div class="card">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="grid two">
+            <div>
+                <label for="name">School Name</label>
+                <input type="text" id="name" name="name" value="{{ school.name }}" required>
+            </div>
+            <div>
+                <label for="logo">School Logo</label>
+                {% if school.logo %}
+                    <div style="margin-bottom: 8px;">
+                        <img src="{{ school.logo.url }}" alt="Logo" style="height: 40px; border-radius: 4px;">
+                    </div>
+                {% endif %}
+                <input type="file" id="logo" name="logo">
+            </div>
+            <div>
+                <label for="location">Location (City/State)</label>
+                <input type="text" id="location" name="location" value="{{ school.location }}">
+            </div>
+            <div>
+                <label for="contact_person">Contact Person</label>
+                <input type="text" id="contact_person" name="contact_person" value="{{ school.contact_person }}">
+            </div>
+            <div>
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" name="phone" value="{{ school.phone }}">
+            </div>
+            <div>
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ school.email }}">
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <label for="key_offerings">Key Offerings / Curriculum (comma separated)</label>
+                <textarea id="key_offerings" name="key_offerings" placeholder="e.g., CBSE, Montessori, IB">{{ school.key_offerings }}</textarea>
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <label for="address">Full Address</label>
+                <textarea id="address" name="address">{{ school.address }}</textarea>
+            </div>
+        </div>
+        <div style="margin-top: 18px;">
+            <button type="submit">Update School Profile</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
