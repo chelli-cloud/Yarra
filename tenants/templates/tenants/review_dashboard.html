@@ -108,136 +108,124 @@
             {% csrf_token %}
             
             <!-- Self Study Section -->
-            <div style="padding: 24px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 24px;">
-                <h3 style="margin-bottom: 20px; color: var(--primary);">Self Study</h3>
-                <div class="grid three">
-                    <div class="form-group">
-                        <label class="label">Status</label>
-                        <select name="self_study_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                            {% for value, label in review_status_choices %}
-                                <option value="{{ value }}" {% if review_cycle.self_study_status == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Start Date</label>
-                        <input class="input" type="date" name="self_study_start" value="{{ review_cycle.self_study_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Completion Date</label>
-                        <input class="input" type="date" name="self_study_end" value="{{ review_cycle.self_study_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                    </div>
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="label">SSR Document</label>
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <input class="input" type="file" name="self_study_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="flex-grow: 1;">
-                        {% if review_cycle.self_study_document %}
-                            <a href="{{ review_cycle.self_study_document.url }}" class="button secondary" style="white-space: nowrap;">Download Current</a>
-                        {% endif %}
+            <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
+                <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Self Study Details</div>
+                <div style="padding: 32px;">
+                    <div class="grid two">
+                        <div class="form-group">
+                            <label class="label">Current Status</label>
+                            <select name="self_study_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                                {% for val, label in review_status_choices %}
+                                <option value="{{ val }}" {% if review_cycle.self_study_status == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Start Date</label>
+                            <input class="input" type="date" name="self_study_start" value="{{ review_cycle.self_study_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">End Date</label>
+                            <input class="input" type="date" name="self_study_end" value="{{ review_cycle.self_study_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Upload Supporting Document</label>
+                            <input type="file" name="self_study_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="width: 100%;">
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Review Visit Section -->
-            <div style="padding: 24px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 24px;">
-                <h3 style="margin-bottom: 20px; color: var(--primary);">Review Visit</h3>
-                <div class="grid three">
-                    <div class="form-group">
-                        <label class="label">Status</label>
-                        <select name="review_visit_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                            {% for value, label in review_status_choices %}
-                                <option value="{{ value }}" {% if review_cycle.review_visit_status == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Start Date</label>
-                        <input class="input" type="date" name="review_visit_start" value="{{ review_cycle.review_visit_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Completion Date</label>
-                        <input class="input" type="date" name="review_visit_end" value="{{ review_cycle.review_visit_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                    </div>
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="label">Observation Report</label>
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <input class="input" type="file" name="review_visit_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="flex-grow: 1;">
-                        {% if review_cycle.review_visit_document %}
-                            <a href="{{ review_cycle.review_visit_document.url }}" class="button secondary" style="white-space: nowrap;">Download Current</a>
-                        {% endif %}
+            <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
+                <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Review Visit Details</div>
+                <div style="padding: 32px;">
+                    <div class="grid two">
+                        <div class="form-group">
+                            <label class="label">Current Status</label>
+                            <select name="review_visit_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                                {% for val, label in review_status_choices %}
+                                <option value="{{ val }}" {% if review_cycle.review_visit_status == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Start Date</label>
+                            <input class="input" type="date" name="review_visit_start" value="{{ review_cycle.review_visit_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">End Date</label>
+                            <input class="input" type="date" name="review_visit_end" value="{{ review_cycle.review_visit_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Upload Supporting Document</label>
+                            <input type="file" name="review_visit_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="width: 100%;">
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- SIP Section -->
-            <div style="padding: 24px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 24px;">
-                <h3 style="margin-bottom: 20px; color: var(--primary);">SIP Preparation</h3>
-                <div class="grid three">
-                    <div class="form-group">
-                        <label class="label">Status</label>
-                        <select name="sip_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                            {% for value, label in review_status_choices %}
-                                <option value="{{ value }}" {% if review_cycle.sip_status == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Start Date</label>
-                        <input class="input" type="date" name="sip_start" value="{{ review_cycle.sip_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Completion Date</label>
-                        <input class="input" type="date" name="sip_end" value="{{ review_cycle.sip_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                    </div>
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="label">Improvement Plan</label>
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <input class="input" type="file" name="sip_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="flex-grow: 1;">
-                        {% if review_cycle.sip_document %}
-                            <a href="{{ review_cycle.sip_document.url }}" class="button secondary" style="white-space: nowrap;">Download Current</a>
-                        {% endif %}
+            <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
+                <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">SIP Preparation Details</div>
+                <div style="padding: 32px;">
+                    <div class="grid two">
+                        <div class="form-group">
+                            <label class="label">Current Status</label>
+                            <select name="sip_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                                {% for val, label in review_status_choices %}
+                                <option value="{{ val }}" {% if review_cycle.sip_status == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Start Date</label>
+                            <input class="input" type="date" name="sip_start" value="{{ review_cycle.sip_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">End Date</label>
+                            <input class="input" type="date" name="sip_end" value="{{ review_cycle.sip_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Upload Supporting Document</label>
+                            <input type="file" name="sip_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="width: 100%;">
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Recommendations Section -->
-            <div style="padding: 24px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 24px;">
-                <h3 style="margin-bottom: 20px; color: var(--primary);">Recommendations</h3>
-                <div class="grid three">
-                    <div class="form-group">
-                        <label class="label">Status</label>
-                        <select name="recommendations_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                            {% for value, label in review_status_choices %}
-                                <option value="{{ value }}" {% if review_cycle.recommendations_status == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Start Date</label>
-                        <input class="input" type="date" name="recommendations_start" value="{{ review_cycle.recommendations_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                    </div>
-                    <div class="form-group">
-                        <label class="label">Completion Date</label>
-                        <input class="input" type="date" name="recommendations_end" value="{{ review_cycle.recommendations_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                    </div>
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="label">Final Report</label>
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <input class="input" type="file" name="recommendations_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="flex-grow: 1;">
-                        {% if review_cycle.recommendations_document %}
-                            <a href="{{ review_cycle.recommendations_document.url }}" class="button secondary" style="white-space: nowrap;">Download Current</a>
-                        {% endif %}
+            <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
+                <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Recommendations Details</div>
+                <div style="padding: 32px;">
+                    <div class="grid two">
+                        <div class="form-group">
+                            <label class="label">Current Status</label>
+                            <select name="recommendations_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                                {% for val, label in review_status_choices %}
+                                <option value="{{ val }}" {% if review_cycle.recommendations_status == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Start Date</label>
+                            <input class="input" type="date" name="recommendations_start" value="{{ review_cycle.recommendations_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">End Date</label>
+                            <input class="input" type="date" name="recommendations_end" value="{{ review_cycle.recommendations_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Upload Supporting Document</label>
+                            <input type="file" name="recommendations_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="width: 100%;">
+                        </div>
                     </div>
                 </div>
             </div>
 
             {% if can_edit_review and not is_archived_selection %}
-                <div style="margin-top: 32px; display: flex; justify-content: flex-end;">
-                    <button type="submit" class="button primary" style="padding: 14px 32px;">Save Review Progress</button>
+                <div style="display: flex; justify-content: flex-end; position: sticky; bottom: 32px; z-index: 10;">
+                    <button type="submit" class="button primary" style="padding: 16px 48px; box-shadow: var(--shadow-lg);">Save Review Updates</button>
                 </div>
             {% endif %}
         </form>

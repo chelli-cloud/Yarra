@@ -297,6 +297,57 @@
 
         ::placeholder { color: #94a3b8; }
 
+        /* Modern File Input Styling */
+        input[type="file"] {
+            padding: 8px;
+            cursor: pointer;
+            position: relative;
+        }
+        input[type="file"]::file-selector-button {
+            margin-right: 16px;
+            border: none;
+            background: var(--sidebar-bg);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            color: #fff;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background: var(--primary);
+        }
+
+        /* SSO Social Buttons */
+        .sso-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text-main);
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 12px;
+            transition: var(--transition);
+        }
+        .sso-button:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        .sso-icon { width: 20px; height: 20px; }
+
+        /* Sidebar footer user pill fix */
+        .user-pill { text-decoration: none; }
+        .user-pill:hover { background: rgba(255,255,255,0.1); }
+
         .help-text { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; display: block; }
 
         /* Tables */

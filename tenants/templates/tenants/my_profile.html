@@ -81,6 +81,10 @@
                                 <label class="label">Admission Date</label>
                                 <input class="input" type="date" name="admission_date" value="{{ profile.admission_date|date:'Y-m-d' }}">
                             </div>
+                            <div class="form-group">
+                                <label class="label">Profile Picture</label>
+                                <input type="file" name="profile_picture" accept="image/*" style="width: 100%;">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -120,6 +124,12 @@
                                 <label class="label">Blood Group</label>
                                 <input class="input" type="text" name="blood_group" value="{{ profile.blood_group }}" placeholder="e.g. O+">
                             </div>
+                            {% if profile.role != 'student' %}
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label class="label">Profile Picture</label>
+                                <input type="file" name="profile_picture" accept="image/*" style="width: 100%;">
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

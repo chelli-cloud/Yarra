@@ -13,7 +13,7 @@
 
 <div class="card" style="max-width: 800px;">
     <p>The newest cycle becomes the active cycle, and earlier ones remain available in the archive.</p>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="grid two">
             <div style="grid-column: 1 / -1;">
@@ -27,6 +27,10 @@
             <div>
                 <label for="end_date">End Date</label>
                 <input type="date" id="end_date" name="end_date">
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <label>Reference Document</label>
+                <input type="file" name="reference_doc" style="width: 100%;">
             </div>
         </div>
         <div class="button-group" style="margin-top: 32px;">
