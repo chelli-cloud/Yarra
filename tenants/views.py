@@ -20,7 +20,12 @@ LEADERSHIP_ROLES = ['school_leader', 'admin']
 @login_required
 def my_profile(request):
     """Module: My Profile - personal details management."""
-    profile = get_object_or_404(Profile, user=request.user)
+    try:
+        profile = request.user.profile
+    except Profile.DoesNotExist:
+        if request.user.is_superuser:
+            return redirect('/admin/tenants/profile/add/')
+        return render(request, 'tenants/access_denied.html', {'message': 'Profile missing.'})
     
     if request.method == 'POST':
         profile.date_of_birth = request.POST.get('date_of_birth') or None
@@ -167,7 +172,14 @@ def user_logout(request):
 @login_required
 def school_profile(request):
     """Module 6: View and Edit School Profile."""
-    profile = get_object_or_404(Profile, user=request.user)
+    try:
+        profile = request.user.profile
+    except Profile.DoesNotExist:
+        if request.user.is_superuser:
+            messages.warning(request, "Superusers need a Profile to view school details. Please create one in the Admin panel.")
+            return redirect('/admin/tenants/profile/add/')
+        return render(request, 'tenants/access_denied.html', {'message': 'Your account is missing a profile. Please contact your school administrator.'})
+    
     school = profile.school
     can_edit = profile.role in PROFILE_EDIT_ROLES
     is_edit_mode = request.GET.get('edit') == '1'
