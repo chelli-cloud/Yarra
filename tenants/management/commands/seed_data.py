@@ -57,11 +57,15 @@ class Command(BaseCommand):
             users = []
             for role in roles:
                 username = f"{role}_{school.pk}"
+                is_staff = (role == 'admin')
+                is_superuser = (role == 'admin')
                 user = User.objects.create(
                     username=username,
                     email=f"{username}@yarra.edu",
                     first_name=name.split()[0],
-                    last_name=role.replace('_', ' ').title()
+                    last_name=role.replace('_', ' ').title(),
+                    is_staff=is_staff,
+                    is_superuser=is_superuser
                 )
                 user.set_password('test@1234')
                 user.save()
