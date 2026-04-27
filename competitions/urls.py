@@ -13,7 +13,9 @@ urlpatterns = [
     path('<int:pk>/', views.event_detail, name='event_detail'),
     path('<int:pk>/edit/', views.event_edit, name='event_edit'),
     path('<int:pk>/register/', views.register_for_event, name='register_for_event'),
-    path('<int:pk>/registration-confirm/', views.registration_confirm, name='registration_confirm'),
-    path('<int:pk>/invoice/', views.download_invoice, name='download_invoice'),
+    path('registration/<int:pk>/confirm/', views.registration_confirm, name='registration_confirm'),
+    path('registration/<int:pk>/attendance/', views.mark_attendance, name='mark_attendance'),
+    path('registration/<int:pk>/feedback/', views.submit_feedback, name='submit_feedback'),
+    path('registration/<int:pk>/invoice/', views.download_invoice, name='download_invoice'),
     path('<int:event_pk>/result/', views.create_competition_result, name='create_competition_result'),
 ]

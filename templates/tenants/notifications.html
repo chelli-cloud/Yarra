@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications | Yarra{% endblock %}
+
+{% block content %}
+<div class="page" style="max-width: 800px; margin: 0 auto;">
+    <div class="page-header">
+        <div>
+            <h1>Notifications</h1>
+            <p class="muted">Stay updated with the latest activity across the consortium.</p>
+        </div>
+        {% if notifications.exists %}
+            <form action="{% url 'mark_notifications_read' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" class="button secondary small">Mark all as read</button>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="list-group list-group-flush">
+            {% for notification in notifications %}
+                <div class="list-group-item {% if not notification.is_read %}bg-light{% endif %}" style="padding: 20px; border-bottom: 1px solid var(--border);">
+                    <div style="display: flex; gap: 16px; align-items: flex-start;">
+                        <div style="font-size: 1.5rem;">
+                            {% if notification.level == 'error' %}🔴{% elif notification.level == 'success' %}🟢{% elif notification.level == 'warning' %}🟡{% else %}🔵{% endif %}
+                        </div>
+                        <div style="flex-grow: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <h4 style="margin-bottom: 4px; font-size: 1.1rem; {% if not notification.is_read %}font-weight: 700;{% endif %}">
+                                    {{ notification.title }}
+                                </h4>
+                                <span class="muted" style="font-size: 0.8rem;">{{ notification.created_at|timesince }} ago</span>
+                            </div>
+                            <p class="muted" style="margin-bottom: 12px; font-size: 0.95rem;">{{ notification.message }}</p>
+                            
+                            <div style="display: flex; gap: 12px;">
+                                {% if not notification.is_read %}
+                                    <a href="{% url 'mark_notification_read' notification.pk %}" class="button primary small">
+                                        {% if notification.target_url %}View & Mark Read{% else %}Mark as Read{% endif %}
+                                    </a>
+                                {% elif notification.target_url %}
+                                    <a href="{{ notification.target_url }}" class="button secondary small">View Again</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div style="text-align: center; padding: 60px;">
+                    <div style="font-size: 3rem; margin-bottom: 24px;">🔔</div>
+                    <h3>No notifications</h3>
+                    <p class="muted">You're all caught up! We'll notify you when something important happens.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-light { background-color: #f8fafc; }
+    .list-group-item:last-child { border-bottom: none; }
+</style>
+{% endblock %}

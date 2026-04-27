@@ -143,7 +143,10 @@
                 <span style="font-size: 1.5rem;">⚙️</span> Admin Panel
             </h2>
             <p class="muted" style="margin-bottom: 24px;">You have administrative access to update this school's public profile.</p>
-            <a href="{% url 'school_profile' %}?edit=1" class="button primary" style="width: 100%; padding: 14px;">Edit School Profile</a>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <a href="{% url 'school_profile' %}?edit=1" class="button primary" style="width: 100%; padding: 14px;">Edit School Profile</a>
+                <a href="{% url 'invite_user' %}" class="button secondary" style="width: 100%; padding: 14px;">Invite Staff/Student</a>
+            </div>
         </div>
         {% endif %}
     </div>

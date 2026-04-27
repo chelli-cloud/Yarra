@@ -4,6 +4,7 @@ from django.db.models import Sum, Count
 from tenants.models import School, Profile, Notification
 from competitions.models import StudentRegistration
 from vendors.models import Vendor, VendorPromotion
+from cms.models import Comment, ContentItem
 from django.utils import timezone
 from datetime import timedelta
 
@@ -24,10 +25,10 @@ def admin_dashboard(request):
         'total_vendors': Vendor.objects.count(),
         'pending_vendors': Vendor.objects.filter(is_approved=False).count(),
         'total_registrations': StudentRegistration.objects.filter(payment_status='verified').count(),
+        'pending_promotions': VendorPromotion.objects.filter(is_approved=False).count(),
     }
     
     # Calculate revenue (assuming fixed fee for now as per settings)
-    # In a real app, this would come from a Payment model
     from django.conf import settings
     registration_fee = getattr(settings, 'COMPETITION_REGISTRATION_FEE', 500)
     metrics['estimated_revenue'] = metrics['total_registrations'] * registration_fee
@@ -35,10 +36,16 @@ def admin_dashboard(request):
     # Recent activity
     recent_schools = School.objects.order_by('-id')[:5]
     flagged_notifications = Notification.objects.filter(level='error').order_by('-created_at')[:5]
+    
+    # Moderation Queue
+    flagged_comments = Comment.objects.filter(is_flagged=True).order_by('-created_at')[:5]
+    pending_vendors = Vendor.objects.filter(is_approved=False).order_by('-created_at')[:5]
 
     return render(request, 'admin/custom_dashboard.html', {
         'metrics': metrics,
         'recent_schools': recent_schools,
         'flagged_notifications': flagged_notifications,
+        'flagged_comments': flagged_comments,
+        'pending_vendors': pending_vendors,
         'title': 'Super Admin Command Centre'
     })

@@ -39,3 +39,12 @@ class ExchangeApplication(models.Model):
 
     def __str__(self):
         return f"Application for {self.listing} from {self.applicant_school.name}"
+
+class ExchangeMessage(models.Model):
+    application = models.ForeignKey(ExchangeApplication, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    content = models.TextField()
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Message from {self.sender.username} on {self.sent_at}"

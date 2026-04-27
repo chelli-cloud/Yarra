@@ -446,6 +446,43 @@ def download_invoice(request, pk):
 
 
 @login_required
+def mark_attendance(request, pk):
+    """M6: Mark a student as attended."""
+    profile = _get_user_profile(request)
+    registration = get_object_or_404(StudentRegistration, pk=pk)
+    
+    if not _can_edit_event(profile, registration.event, request.user):
+        messages.error(request, "You don't have permission to mark attendance.")
+        return redirect('event_detail', pk=registration.event.pk)
+    
+    registration.attended = not registration.attended
+    registration.save()
+    
+    status = "attended" if registration.attended else "not attended"
+    messages.success(request, f"Marked {registration.student.username} as {status}.")
+    return redirect('event_detail', pk=registration.event.pk)
+
+@login_required
+def submit_feedback(request, pk):
+    """M6: Student submits feedback for an event."""
+    profile = _get_user_profile(request)
+    registration = get_object_or_404(StudentRegistration, pk=pk, student=request.user)
+    
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        text = request.POST.get('text')
+        
+        if rating:
+            registration.feedback_rating = int(rating)
+            registration.feedback_text = text
+            registration.save()
+            messages.success(request, "Thank you for your feedback!")
+        else:
+            messages.error(request, "Please provide a rating.")
+            
+    return redirect('event_detail', pk=registration.event.pk)
+
+@login_required
 @require_POST
 def mark_notifications_read(request):
     Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)

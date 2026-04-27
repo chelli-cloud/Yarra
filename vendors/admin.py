@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Vendor, VendorPromotion
+from .models import Vendor, VendorPromotion, VendorEnquiry
 
 @admin.register(Vendor)
 class VendorAdmin(admin.ModelAdmin):
@@ -26,3 +26,10 @@ class VendorPromotionAdmin(admin.ModelAdmin):
     def approve_promotions(self, request, queryset):
         queryset.update(is_approved=True)
     approve_promotions.short_description = "Approve selected promotions"
+
+@admin.register(VendorEnquiry)
+class VendorEnquiryAdmin(admin.ModelAdmin):
+    list_display = ('vendor', 'school', 'user', 'subject', 'created_at')
+    list_filter = ('vendor', 'school', 'created_at')
+    search_fields = ('subject', 'message', 'vendor__name', 'school__name')
+    readonly_fields = ('created_at',)

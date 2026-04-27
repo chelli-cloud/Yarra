@@ -22,6 +22,17 @@ class Event(models.Model):
     description = models.TextField()
     category = models.CharField(max_length=20, choices=EventCategory.choices)
 
+    # M6 Requirements
+    event_date = models.DateTimeField(null=True, blank=True)
+    format = models.CharField(max_length=20, choices=[
+        ('in_person', 'In-person'),
+        ('virtual', 'Virtual'),
+        ('hybrid', 'Hybrid'),
+    ], default='virtual')
+    speaker_host = models.CharField(max_length=200, blank=True)
+    capacity = models.PositiveIntegerField(null=True, blank=True)
+    location = models.CharField(max_length=255, blank=True, help_text="Venue or Meeting Link")
+
     # Actionables
     registration_link = models.URLField(help_text="Google Form URL for registration")
     brochure = models.FileField(upload_to='competitions/brochures/', blank=True, null=True)
@@ -73,6 +84,12 @@ class StudentRegistration(models.Model):
 
     payment_status = models.CharField(max_length=20, choices=PaymentStatus.choices, default='pending')
     payment_screenshot = models.FileField(upload_to='competitions/payment_screenshots/', blank=True, null=True)
+
+    # M6: Attendance & Feedback
+    attended = models.BooleanField(default=False)
+    feedback_rating = models.PositiveIntegerField(null=True, blank=True, help_text="1-5 rating")
+    feedback_text = models.TextField(blank=True)
+    certificate_issued = models.BooleanField(default=False)
 
     registered_at = models.DateTimeField(auto_now_add=True)
 

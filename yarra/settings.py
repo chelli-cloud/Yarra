@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'competitions',
     'vendors',
     'exchanges',
+    'cms',
+    'analytics',
 
     # Third Party Apps
     'storages',

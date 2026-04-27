@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Join Yarra - Accept Invitation{% endblock %}
+
+{% block content %}
+<div class="page" style="display: flex; align-items: center; justify-content: center; min-height: 80vh;">
+    <div class="card" style="max-width: 500px; width: 100%;">
+        <div style="text-align: center; margin-bottom: 32px;">
+            <h1 style="font-size: 1.5rem;">Join {{ invitation.school.name }}</h1>
+            <p class="muted">You've been invited as a <strong>{{ invitation.get_role_display }}</strong>.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <span class="badge error" style="margin-top: 4px;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            
+            <button type="submit" class="button primary" style="width: 100%;">Create Account & Join</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

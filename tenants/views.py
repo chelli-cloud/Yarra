@@ -3,7 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse
-from .models import School, Profile, ReviewCycle, TeacherResource, DiscussionThread, ThreadReply, Notification
+from .models import School, Profile, ReviewCycle, TeacherResource, DiscussionThread, ThreadReply, Notification, Invitation
+from .forms import InvitationForm, SchoolRegistrationForm, UserRegistrationForm
+import secrets
 
 REVIEW_STATUS_DISPLAY = {
     'not_started': 'Not Started',
@@ -202,6 +204,24 @@ def school_profile(request):
     return render(request, template, {'school': school, 'can_edit': can_edit})
 
 @login_required
+def notification_list(request):
+    """M12: List all notifications for the current user."""
+    notifications = request.user.notifications.all().order_by('-created_at')
+    return render(request, 'tenants/notifications.html', {
+        'notifications': notifications
+    })
+
+@login_required
+def mark_notification_read(request, pk):
+    """M12: Mark a specific notification as read."""
+    notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
+    notification.is_read = True
+    notification.save()
+    if notification.target_url:
+        return redirect(notification.target_url)
+    return redirect('notification_list')
+
+@login_required
 def school_network(request):
     """Module 6: Global Directory - view across all tenants."""
     schools = School.objects.all().order_by('name')
@@ -258,6 +278,93 @@ def review_dashboard(request):
         'selected_cycle_is_active': selected_cycle is not None and active_cycle is not None and selected_cycle.pk == active_cycle.pk,
         'review_status_choices': ReviewCycle._meta.get_field('self_study_status').choices,
     })
+
+@login_required
+def invite_user(request):
+    """Module M1: School Admin invites teachers and students."""
+    profile = get_object_or_404(Profile, user=request.user)
+    if profile.role not in ['admin', 'school_leader']:
+        return render(request, 'tenants/access_denied.html', status=403)
+
+    if request.method == 'POST':
+        form = InvitationForm(request.POST)
+        if form.is_valid():
+            invitation = form.save(commit=False)
+            invitation.school = profile.school
+            invitation.token = secrets.token_urlsafe(32)
+            invitation.invited_by = request.user
+            invitation.save()
+            
+            # In a real app, send email here
+            invite_url = request.build_absolute_uri(
+                reverse('accept_invitation', args=[invitation.token])
+            )
+            messages.success(request, f"Invitation created! Link: {invite_url}")
+            return redirect('school_profile')
+    else:
+        form = InvitationForm()
+    
+    return render(request, 'tenants/invite_user.html', {'form': form})
+
+def accept_invitation(request, token):
+    """Module M1: Handle invitation link."""
+    invitation = get_object_or_404(Invitation, token=token, is_used=False)
+    
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+            
+            Profile.objects.create(
+                user=user,
+                school=invitation.school,
+                role=invitation.role
+            )
+            
+            invitation.is_used = True
+            invitation.save()
+            
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            messages.success(request, "Welcome! Your account has been created.")
+            return redirect('school_profile')
+    else:
+        form = UserRegistrationForm(initial={'email': invitation.email})
+    
+    return render(request, 'tenants/accept_invitation.html', {'form': form, 'invitation': invitation})
+
+def school_registration(request):
+    """Module M2: School Onboarding."""
+    if request.method == 'POST':
+        form = SchoolRegistrationForm(request.POST, request.FILES)
+        if form.is_valid():
+            school = form.save()
+            
+            # Create the Admin user for the school
+            admin_email = form.cleaned_data['admin_email']
+            admin_password = form.cleaned_data['admin_password']
+            username = admin_email.split('@')[0]
+            
+            user = User.objects.create_user(
+                username=username,
+                email=admin_email,
+                password=admin_password
+            )
+            
+            Profile.objects.create(
+                user=user,
+                school=school,
+                role='admin'
+            )
+            
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            messages.success(request, f"Welcome! {school.name} has been registered.")
+            return redirect('school_profile')
+    else:
+        form = SchoolRegistrationForm()
+    
+    return render(request, 'tenants/school_registration.html', {'form': form})
 
 @login_required
 def create_review_cycle(request):

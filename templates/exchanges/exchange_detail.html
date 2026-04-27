@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'exchange_list' %}">Exchanges</a></li>
+            <li class="breadcrumb-item active">Details</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <span class="badge {% if listing.type == 'teacher' %}bg-info{% else %}bg-warning{% endif %} mb-2">{{ listing.get_type_display }} Exchange</span>
+                            <h1>{{ listing.subject_grade }}</h1>
+                            <p class="text-primary fw-bold"><i class="fas fa-school"></i> {{ listing.school.name }}</p>
+                        </div>
+                        <span class="badge bg-success">Status: {{ listing.get_status_display }}</span>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light">
+                                <small class="text-muted text-uppercase fw-bold d-block mb-1">Duration</small>
+                                <span><i class="far fa-clock me-2"></i>{{ listing.duration }}</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light">
+                                <small class="text-muted text-uppercase fw-bold d-block mb-1">Location</small>
+                                <span><i class="fas fa-map-marker-alt me-2"></i>{{ listing.school.location }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3">Description</h5>
+                    <p class="text-muted mb-4" style="line-height: 1.6; white-space: pre-line;">{{ listing.description }}</p>
+
+                    {% if listing.objectives %}
+                    <h5 class="fw-bold mb-3">Learning Objectives</h5>
+                    <p class="text-muted mb-4" style="line-height: 1.6; white-space: pre-line;">{{ listing.objectives }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    {% if is_own_listing %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> This is your school's listing.
+                        </div>
+                        <a href="{% url 'my_exchanges' %}" class="button secondary w-100">Manage Applications</a>
+                    {% elif existing_application %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i> You have already applied for this exchange.
+                        </div>
+                        <a href="{% url 'application_detail' existing_application.pk %}" class="button primary w-100">View Application Chat</a>
+                    {% else %}
+                        <h5 class="fw-bold mb-3">Apply for Exchange</h5>
+                        <p class="text-muted small mb-4">Submit your school's interest. Only school leaders or admins can apply.</p>
+                        
+                        {% if user_profile.role == 'school_leader' or user_profile.role == 'admin' %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group mb-4">
+                                <label class="label">Introduction / Cover Letter</label>
+                                <textarea name="message" class="input" rows="6" placeholder="Tell the partner school why your staff/students are a good match..." required></textarea>
+                            </div>
+                            <button type="submit" class="button primary w-100">Submit Application</button>
+                        </form>
+                        {% else %}
+                        <div class="alert alert-warning small">
+                            Applications must be submitted by a School Leader or Administrator.
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="page-header">
+        <div>
+            <h1>Vendor Directory</h1>
+            <p class="muted">Curated marketplace of vetted school vendors with consortium-negotiated pricing.</p>
+        </div>
+    </div>
+
+    <!-- Promotions / Banners -->
+    {% if promotions %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div id="vendorPromotions" class="carousel slide shadow-sm rounded overflow-hidden" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for promo in promotions %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img src="{{ promo.banner_image.url }}" class="d-block w-100" alt="{{ promo.title }}" style="max-height: 300px; object-fit: cover;">
+                        <div class="carousel-caption d-none d-md-block" style="background: rgba(0,0,0,0.5); border-radius: 10px;">
+                            <h5>{{ promo.title }}</h5>
+                            <p>{{ promo.offer_text }}</p>
+                            <a href="{{ promo.cta_link }}" class="btn btn-primary btn-sm">Learn More</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Categories</h5>
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'vendor_list' %}" class="list-group-item list-group-item-action {% if not selected_category %}active{% endif %}">All Categories</a>
+                        {% for val, label in categories %}
+                        <a href="{% url 'vendor_list' %}?category={{ val }}" class="list-group-item list-group-item-action {% if selected_category == val %}active{% endif %}">{{ label }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendor Listings -->
+        <div class="col-md-9">
+            <div class="row g-4">
+                {% for vendor in vendors %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-up">
+                        <div style="height: 160px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px;">
+                            {% if vendor.logo %}
+                            <img src="{{ vendor.logo.url }}" alt="{{ vendor.name }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            {% else %}
+                            <span style="font-size: 3rem;">🏢</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0 text-truncate" style="max-width: 70%;">{{ vendor.name }}</h5>
+                                {% if vendor.is_vetted %}
+                                <span class="badge bg-success" title="Vetted by Consortium"><i class="fas fa-check-circle"></i> Vetted</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-muted small mb-3">{{ vendor.get_category_display }}</p>
+                            <p class="card-text text-muted" style="font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; height: 3.8em;">{{ vendor.description }}</p>
+                            <div class="mt-auto">
+                                <a href="{% url 'vendor_detail' vendor.pk %}" class="button secondary w-100">View Profile</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No vendors found in this category.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-up { transition: transform 0.2s; }
+    .hover-up:hover { transform: translateY(-5px); }
+</style>
+{% endblock %}

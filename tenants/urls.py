@@ -13,4 +13,9 @@ urlpatterns = [
     path('network/', views.school_network, name='school_network'),
     path('leadership/', views.leadership_connect, name='leadership_connect'),
     path('leadership/thread/<int:pk>/', views.thread_detail, name='thread_detail'),
+    path('invite/', views.invite_user, name='invite_user'),
+    path('invite/accept/<str:token>/', views.accept_invitation, name='accept_invitation'),
+    path('register-school/', views.school_registration, name='school_registration'),
+    path('notifications/', views.notification_list, name='notification_list'),
+    path('notifications/<int:pk>/read/', views.mark_notification_read, name='mark_notification_read'),
 ]

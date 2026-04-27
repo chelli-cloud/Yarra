@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Register School - Yarra{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <div>
+            <h1>Register Your School</h1>
+            <p class="muted">Join the Yaara Consortium and connect with schools across India.</p>
+        </div>
+    </div>
+
+    <div class="card" style="max-width: 800px;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="grid two">
+                {% for field in form %}
+                    <div class="form-group {% if field.name == 'address' or field.name == 'key_offerings' %}grid-column-span-2{% endif %}">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <span class="help-text">{{ field.help_text }}</span>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <span class="badge error" style="margin-top: 4px;">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="button-group" style="margin-top: 24px;">
+                <button type="submit" class="button primary">Complete Registration</button>
+                <a href="{% url 'home' %}" class="button secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .grid-column-span-2 { grid-column: span 2; }
+    @media (max-width: 768px) {
+        .grid-column-span-2 { grid-column: span 1; }
+    }
+</style>
+{% endblock %}

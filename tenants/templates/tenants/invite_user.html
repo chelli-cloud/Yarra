@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Invite User - Yarra{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <div>
+            <h1>Invite New User</h1>
+            <p class="muted">Send an invitation to a teacher, admin, or student to join your school on Yarra.</p>
+        </div>
+    </div>
+
+    <div class="card" style="max-width: 600px;">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <span class="help-text">{{ field.help_text }}</span>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <span class="badge error" style="margin-top: 4px;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            
+            <div class="button-group">
+                <button type="submit" class="button primary">Create Invitation Link</button>
+                <a href="{% url 'school_profile' %}" class="button secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

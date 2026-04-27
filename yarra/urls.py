@@ -24,8 +24,12 @@ urlpatterns = [
     path('admin/dashboard/', admin_dashboard, name='admin_dashboard'),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
+    path('vendors/', include('vendors.urls')),
+    path('exchanges/', include('exchanges.urls')),
     path('', include('tenants.urls')),
     path('competitions/', include('competitions.urls')),
+    path('cms/', include('cms.urls')),
+    path('analytics/', include('analytics.urls')),
 ]
 
 if settings.DEBUG:

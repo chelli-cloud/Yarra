@@ -205,3 +205,20 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.recipient.username}: {self.title}"
+
+
+class Invitation(models.Model):
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='invitations')
+    email = models.EmailField()
+    role = models.CharField(max_length=20, choices=[
+        ('admin', 'Admin'),
+        ('teacher', 'Teacher'),
+        ('student', 'Student'),
+    ])
+    token = models.CharField(max_length=100, unique=True)
+    is_used = models.BooleanField(default=False)
+    invited_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Invite for {self.email} to join {self.school.name} as {self.role}"

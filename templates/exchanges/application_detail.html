@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'my_exchanges' %}">My Exchanges</a></li>
+            <li class="breadcrumb-item active">Application Discussion</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Message History -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h5 class="fw-bold mb-0">Coordination Chat</h5>
+                </div>
+                <div class="card-body p-4" style="height: 500px; overflow-y: auto; background: #f8fafc;">
+                    <!-- Original Application Message -->
+                    <div class="mb-4">
+                        <div class="p-3 rounded-3 bg-white shadow-sm border-start border-primary border-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="fw-bold text-primary">{{ application.applicant_school.name }} (Initial Interest)</span>
+                                <small class="text-muted">{{ application.applied_at|date:"M d, Y" }}</small>
+                            </div>
+                            <p class="mb-0 small text-dark">{{ application.message }}</p>
+                        </div>
+                    </div>
+
+                    {% for msg in messages %}
+                    <div class="mb-4 d-flex {% if msg.sender == request.user %}justify-content-end{% endif %}">
+                        <div class="p-3 rounded-3 shadow-sm {% if msg.sender == request.user %}bg-primary text-white{% else %}bg-white text-dark{% endif %}" style="max-width: 80%;">
+                            <div class="d-flex justify-content-between gap-4 mb-1">
+                                <span class="small fw-bold">{{ msg.sender.get_full_name|default:msg.sender.username }}</span>
+                                <small class="{% if msg.sender == request.user %}text-white-50{% else %}text-muted{% endif %}">{{ msg.sent_at|time }}</small>
+                            </div>
+                            <p class="mb-0 small">{{ msg.content }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer bg-white p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="text" name="content" class="input" placeholder="Type your message here..." required>
+                            <button type="submit" class="button primary">Send</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Context & Actions -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3">Exchange Context</h6>
+                    <h5 class="fw-bold mb-1">{{ application.listing.subject_grade }}</h5>
+                    <p class="small text-primary mb-4"><i class="fas fa-school"></i> {{ application.listing.school.name }}</p>
+                    
+                    <div class="p-3 rounded bg-light mb-4">
+                        <small class="text-muted d-block mb-1">Application Status</small>
+                        <span class="badge {% if application.status == 'pending' %}bg-warning{% elif application.status == 'approved' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ application.get_status_display }}
+                        </span>
+                    </div>
+
+                    {% if is_owner and application.status != 'approved' %}
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3">Manage Application</h6>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="status" value="under_review" class="button secondary btn-sm">Move to Under Review</button>
+                            <button type="submit" name="status" value="approved" class="button success btn-sm">Approve & Match</button>
+                            <button type="submit" name="status" value="rejected" class="button danger btn-sm">Reject Application</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

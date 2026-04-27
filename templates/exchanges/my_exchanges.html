@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="page-header">
+        <div>
+            <h1>My Exchanges</h1>
+            <p class="muted">Manage your school's listings and applications.</p>
+        </div>
+        <a href="{% url 'exchange_list' %}" class="button secondary">Browse All</a>
+    </div>
+
+    <div class="row g-4">
+        <!-- My Listings -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="card-title fw-bold mb-0">Our School's Listings</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% for listing in my_listings %}
+                    <div class="p-3 rounded-3 border mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="fw-bold mb-0">{{ listing.subject_grade }}</h6>
+                            <span class="badge {% if listing.status == 'open' %}bg-success{% elif listing.status == 'matched' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                {{ listing.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ listing.applications.count }} Applications received</small>
+                            <a href="{% url 'exchange_detail' listing.pk %}" class="btn btn-link btn-sm text-decoration-none p-0">Manage</a>
+                        </div>
+                        
+                        {% if listing.applications.exists %}
+                        <div class="mt-3 pt-3 border-top">
+                            <p class="small fw-bold text-muted text-uppercase mb-2">Recent Applications:</p>
+                            {% for app in listing.applications.all %}
+                            <a href="{% url 'application_detail' app.pk %}" class="d-block p-2 rounded bg-light text-decoration-none mb-1 small text-dark">
+                                <i class="fas fa-school me-2 text-primary"></i> {{ app.applicant_school.name }} 
+                                <span class="float-end badge bg-white border text-dark">{{ app.get_status_display }}</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-muted py-4">You haven't posted any listings yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- My Applications -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="card-title fw-bold mb-0">Our Sent Applications</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% for app in my_applications %}
+                    <div class="p-3 rounded-3 border mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="fw-bold mb-0">{{ app.listing.subject_grade }}</h6>
+                            <span class="badge {% if app.status == 'pending' %}bg-warning{% elif app.status == 'approved' %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ app.get_status_display }}
+                            </span>
+                        </div>
+                        <p class="small text-primary mb-3"><i class="fas fa-school"></i> Partner: {{ app.listing.school.name }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Applied {{ app.applied_at|date }}</small>
+                            <a href="{% url 'application_detail' app.pk %}" class="button secondary btn-sm">View Discussion</a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-muted py-4">You haven't submitted any applications yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

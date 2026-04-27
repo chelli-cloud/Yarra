@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="page-header">
+        <div>
+            <h1>Exchange Programs</h1>
+            <p class="muted">Share talent and create cross-school learning experiences for teachers and students.</p>
+        </div>
+        {% if user_profile.role == 'school_leader' or user_profile.role == 'admin' %}
+        <div class="d-flex gap-3">
+            <a href="{% url 'my_exchanges' %}" class="button secondary">My Listings & Applications</a>
+            <a href="{% url 'create_listing' %}" class="button primary"><i class="fas fa-plus"></i> Post Opportunity</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center gap-4">
+                <span class="fw-bold text-muted small text-uppercase">Filter By:</span>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'exchange_list' %}" class="badge {% if not selected_type %}bg-primary{% else %}bg-light text-dark border{% endif %} text-decoration-none px-3 py-2">All</a>
+                    {% for val, label in types %}
+                    <a href="{% url 'exchange_list' %}?type={{ val }}" class="badge {% if selected_type == val %}bg-primary{% else %}bg-light text-dark border{% endif %} text-decoration-none px-3 py-2">{{ label }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listings Grid -->
+    <div class="row g-4">
+        {% for listing in listings %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge {% if listing.type == 'teacher' %}bg-info{% else %}bg-warning{% endif %}">{{ listing.get_type_display }} Exchange</span>
+                        <small class="text-muted">{{ listing.created_at|timesince }} ago</small>
+                    </div>
+                    <h5 class="card-title mb-1">{{ listing.subject_grade }}</h5>
+                    <p class="text-primary small fw-bold mb-3"><i class="fas fa-school"></i> {{ listing.school.name }}</p>
+                    
+                    <div class="d-flex gap-3 mb-4 small text-muted">
+                        <span><i class="far fa-clock"></i> {{ listing.duration }}</span>
+                        <span><i class="fas fa-map-marker-alt"></i> {{ listing.school.location }}</span>
+                    </div>
+
+                    <p class="card-text text-muted mb-4 small" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; height: 4.2em;">
+                        {{ listing.description }}
+                    </p>
+
+                    <a href="{% url 'exchange_detail' listing.pk %}" class="button secondary w-100">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fas fa-handshake fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No open exchange opportunities found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
