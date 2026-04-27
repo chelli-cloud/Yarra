@@ -474,6 +474,11 @@
                         <span class="nav-icon">🤝</span> Leadership
                     </a>
                 {% endif %}
+                {% if request.user.is_superuser %}
+                    <a href="{% url 'master_dashboard' %}" class="nav-link">
+                        <span class="nav-icon">🔑</span> Master Dashboard
+                    </a>
+                {% endif %}
             </nav>
 
             <div class="sidebar-footer">

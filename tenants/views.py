@@ -1,8 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse
+from django.db.models import Count
 from .models import School, Profile, ReviewCycle, TeacherResource, DiscussionThread, ThreadReply, Notification, Invitation
 from .forms import InvitationForm, SchoolRegistrationForm, UserRegistrationForm
 import secrets
@@ -171,19 +172,45 @@ def user_logout(request):
     logout(request)
     return redirect('home')
 
-@login_required
-def school_profile(request):
-    """Module 6: View and Edit School Profile."""
-    try:
-        profile = request.user.profile
-    except Profile.DoesNotExist:
-        if request.user.is_superuser:
-            messages.warning(request, "Superusers need a Profile to view school details. Please create one in the Admin panel.")
-            return redirect('/admin/tenants/profile/add/')
-        return render(request, 'tenants/access_denied.html', {'message': 'Your account is missing a profile. Please contact your school administrator.'})
+@user_passes_test(lambda u: u.is_superuser)
+def master_dashboard(request):
+    """Superuser dashboard to manage and view all schools."""
+    schools = School.objects.annotate(
+        user_count=Count('profiles', distinct=True),
+        event_count=Count('events', distinct=True)
+    ).order_by('name')
     
-    school = profile.school
-    can_edit = profile.role in PROFILE_EDIT_ROLES
+    # Add admin username to each school object for display
+    for school in schools:
+        admin_profile = Profile.objects.filter(school=school, role='school_leader').first()
+        school.admin_username = admin_profile.user.username if admin_profile else "N/A"
+    
+    total_users = sum(s.user_count for s in schools)
+    total_events = sum(s.event_count for s in schools)
+    
+    return render(request, 'tenants/master_dashboard.html', {
+        'schools': schools,
+        'total_users': total_users,
+        'total_events': total_events,
+    })
+
+@login_required
+def school_profile(request, pk=None):
+    """Module 6: View and Edit School Profile."""
+    if pk and request.user.is_superuser:
+        school = get_object_or_404(School, pk=pk)
+        can_edit = True # Superusers can edit anything
+    else:
+        try:
+            profile = request.user.profile
+            school = profile.school
+            can_edit = profile.role in PROFILE_EDIT_ROLES
+        except Profile.DoesNotExist:
+            if request.user.is_superuser:
+                messages.warning(request, "Superusers need a Profile to view their own school. Use the Master Dashboard to view other schools.")
+                return redirect('master_dashboard')
+            return render(request, 'tenants/access_denied.html', {'message': 'Your account is missing a profile.'})
+    
     is_edit_mode = request.GET.get('edit') == '1'
     
     if request.method == 'POST' and can_edit:

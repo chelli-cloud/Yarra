@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Master Dashboard - Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Master Dashboard</h1>
+        <p class="muted">Manage all registered schools and their activities.</p>
+    </div>
+    <div class="button-group">
+        <a href="{% url 'admin:tenants_school_add' %}" class="button primary">Add New School</a>
+    </div>
+</div>
+
+<div class="grid three" style="margin-bottom: 32px;">
+    <div class="card">
+        <h3 style="color: var(--primary)">{{ schools.count }}</h3>
+        <p class="muted">Total Schools</p>
+    </div>
+    <div class="card">
+        <h3>{{ total_users }}</h3>
+        <p class="muted">Total Users</p>
+    </div>
+    <div class="card">
+        <h3>{{ total_events }}</h3>
+        <p class="muted">Total Events</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>School Name</th>
+                    <th>Admin Username</th>
+                    <th>Admin Password</th>
+                    <th>Location</th>
+                    <th>Tier</th>
+                    <th>Users</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for school in schools %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 700;">{{ school.name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ school.email }}</div>
+                    </td>
+                    <td><code>{{ school.admin_username }}</code></td>
+                    <td><code>Password123!</code></td>
+                    <td>{{ school.location }}</td>
+                    <td>
+                        <span class="badge {% if school.membership_tier == 'premium' %}success{% elif school.membership_tier == 'basic' %}info{% else %}warning{% endif %}">
+                            {{ school.membership_tier }}
+                        </span>
+                    </td>
+                    <td>{{ school.user_count }}</td>
+                    <td>{{ school.event_count }}</td>
+                    <td>
+                        <div class="button-group">
+                            <a href="{% url 'school_profile_detail' school.pk %}" class="button secondary" style="padding: 6px 12px; font-size: 0.8rem;">View Profile</a>
+                            <a href="{% url 'admin:tenants_school_change' school.pk %}" class="button ghost" style="padding: 6px 12px; font-size: 0.8rem;">Edit in Admin</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 48px;">
+                        <p class="muted">No schools registered yet.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
