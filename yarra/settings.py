@@ -29,6 +29,18 @@ DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,yarra.pythonanywhere.com').split(',')
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://yarra.pythonanywhere.com',
+]
+if os.getenv('DJANGO_ALLOWED_HOSTS'):
+    for host in os.getenv('DJANGO_ALLOWED_HOSTS').split(','):
+        host = host.strip()
+        if host:
+            # Add both http and https for maximum compatibility in different environments
+            CSRF_TRUSTED_ORIGINS.append(f"https://{host}")
+            if DEBUG:
+                CSRF_TRUSTED_ORIGINS.append(f"http://{host}")
+
 
 # Application definition
 
@@ -175,16 +187,16 @@ else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 
-# Caching with Redis (Fall back to LocMem in dev if Redis is missing)
+# Caching and Sessions
 REDIS_URL = os.getenv('REDIS_URL')
-if REDIS_URL or not DEBUG:
+if REDIS_URL:
     CACHES = {
         'default': {
             'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': REDIS_URL or 'redis://127.0.0.1:6379/1',
+            'LOCATION': REDIS_URL,
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-                'IGNORE_EXCEPTIONS': True,  # Fail gracefully
+                'IGNORE_EXCEPTIONS': True,
             }
         }
     }
@@ -210,5 +222,10 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'login'
