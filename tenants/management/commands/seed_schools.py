@@ -31,19 +31,27 @@ class Command(BaseCommand):
             )
             
             username = f'{slug}_admin'
-            if not User.objects.filter(username=username).exists():
-                user = User.objects.create_user(
-                    username=username,
-                    email=f'admin@{slug}.edu',
-                    password=password
-                )
-                Profile.objects.create(
-                    user=user,
-                    school=school,
-                    role='school_leader'
-                )
+            user, created = User.objects.get_or_create(
+                username=username,
+                defaults={
+                    'email': f'admin@{slug}.edu',
+                }
+            )
+            
+            user.set_password(password)
+            user.save()
+            
+            Profile.objects.get_or_create(
+                user=user,
+                defaults={
+                    'school': school,
+                    'role': 'school_leader'
+                }
+            )
+            
+            if created:
                 self.stdout.write(self.style.SUCCESS(f'Created school {name} and user {username}'))
             else:
-                self.stdout.write(self.style.WARNING(f'User {username} already exists'))
+                self.stdout.write(self.style.SUCCESS(f'Updated password for user {username}'))
 
         self.stdout.write(self.style.SUCCESS('Successfully seeded 10 schools. Default password: Password123!'))

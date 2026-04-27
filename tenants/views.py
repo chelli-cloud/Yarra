@@ -158,9 +158,20 @@ def user_login(request):
     if request.user.is_authenticated:
         return redirect('school_profile')
     if request.method == 'POST':
-        username = request.POST.get('username')
+        login_id = request.POST.get('username')
         password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
+        
+        # Try authenticating with username
+        user = authenticate(request, username=login_id, password=password)
+        
+        # If username fails, try authenticating with email
+        if user is None:
+            try:
+                user_obj = User.objects.get(email=login_id)
+                user = authenticate(request, username=user_obj.username, password=password)
+            except (User.DoesNotExist, User.MultipleObjectsReturned):
+                user = None
+                
         if user is not None:
             login(request, user)
             return redirect('school_profile')
