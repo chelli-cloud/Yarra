@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Exchange Application | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <a href="{% url 'my_exchanges' %}" class="button secondary">Back to My Exchanges</a>
+</div>
+
+<div class="grid two">
+    <div>
+        <div class="card">
+            <h1 style="margin-bottom: 12px;">Application for {{ application.listing.get_type_display }} Exchange</h1>
+            <p class="muted"><strong>Listing School:</strong> {{ application.listing.school.name }}</p>
+            <p class="muted"><strong>Applicant School:</strong> {{ application.applicant_school.name }}</p>
+            <p class="muted"><strong>Subject/Grade:</strong> {{ application.listing.subject_grade }}</p>
+            <p class="muted"><strong>Duration:</strong> {{ application.listing.duration }}</p>
+            <p class="muted"><strong>Status:</strong> <span class="badge {% if application.status == 'approved' %}success{% elif application.status == 'rejected' %}error{% elif application.status == 'completed' %}info{% else %}warning{% endif %}">{{ application.get_status_display }}</span></p>
+            <p><strong>Message:</strong> {{ application.message|linebreaks }}</p>
+        </div>
+
+        <!-- Actions for Listing Owner -->
+        {% if is_owner %}
+        <div class="card">
+            <h2>Manage Application</h2>
+            {% if application.status == 'pending' or application.status == 'under_review' %}
+            <form action="{% url 'application_detail' application.pk %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <select name="status" onchange="this.form.submit()">
+                    <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="under_review" {% if application.status == 'under_review' %}selected{% endif %}>Under Review</option>
+                    <option value="approved" {% if application.status == 'approved' %}selected{% endif %}>Approve</option>
+                    <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Reject</option>
+                </select>
+            </form>
+            {% endif %}
+
+            {% if application.status == 'approved' %}
+            <form action="{% url 'complete_exchange' application.pk %}" method="post" style="display:inline; margin-left: 10px;">
+                {% csrf_token %}
+                <button type="submit" class="button success">Mark as Completed</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Feedback Section -->
+        {% if application.status == 'completed' %}
+        <div class="card">
+            <h2>Feedback</h2>
+            {% if is_owner %}
+                {% if application.listing_school_feedback_rating %}
+                <p><strong>Your Feedback:</strong> Rating {{ application.listing_school_feedback_rating }}/5</p>
+                <p>{{ application.listing_school_feedback_comments|linebreaks }}</p>
+                {% else %}
+                <h3>Submit Your Feedback</h3>
+                <form action="{% url 'submit_exchange_feedback' application.pk %}" method="post">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 12px;">
+                        <label for="rating">Rating (1-5)</label>
+                        <input type="number" id="rating" name="rating" min="1" max="5" required>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label for="comments">Comments</label>
+                        <textarea id="comments" name="comments" rows="4"></textarea>
+                    </div>
+                    <button type="submit">Submit Feedback</button>
+                </form>
+                {% endif %}
+            {% endif %}
+
+            {% if is_applicant %}
+                {% if application.applicant_school_feedback_rating %}
+                <p><strong>Your Feedback:</strong> Rating {{ application.applicant_school_feedback_rating }}/5</p>
+                <p>{{ application.applicant_school_feedback_comments|linebreaks }}</p>
+                {% else %}
+                <h3>Submit Your Feedback</h3>
+                <form action="{% url 'submit_exchange_feedback' application.pk %}" method="post">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 12px;">
+                        <label for="rating">Rating (1-5)</label>
+                        <input type="number" id="rating" name="rating" min="1" max="5" required>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label for="comments">Comments</label>
+                        <textarea id="comments" name="comments" rows="4"></textarea>
+                    </div>
+                    <button type="submit">Submit Feedback</button>
+                </form>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+    <div>
+        <div class="card">
+            <h2>Messages</h2>
+            <div class="message-list" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); padding: 10px; border-radius: 5px;">
+                {% for message in messages %}
+                <div class="message-item" style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
+                    <p><strong>{{ message.sender.username }}</strong> <span class="muted" style="font-size: 0.8em;">{{ message.sent_at|date:"M d, H:i" }}</span></p>
+                    <p>{{ message.content|linebreaksbr }}</p>
+                </div>
+                {% empty %}
+                <p class="muted">No messages yet.</p>
+                {% endfor %}
+            </div>
+            <form action="{% url 'application_detail' application.pk %}" method="post" style="margin-top: 20px;">
+                {% csrf_token %}
+                <textarea name="content" rows="3" placeholder="Type your message..." required></textarea>
+                <button type="submit" style="margin-top: 10px;">Send Message</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

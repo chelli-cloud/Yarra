@@ -37,9 +37,7 @@ def generate_invoice_pdf(registration):
     # Table Content
     p.setFont("Helvetica", 12)
     p.drawString(100, height - 350, f"Registration Fee - {registration.event.title}")
-    # Amount from settings or event
-    from django.conf import settings
-    amount = getattr(settings, 'COMPETITION_REGISTRATION_FEE', 500)
+    amount = registration.event.fee
     p.drawRightString(width - 100, height - 350, f"Rs. {amount}.00")
     
     # Total

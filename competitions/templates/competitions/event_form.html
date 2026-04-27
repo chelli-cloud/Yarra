@@ -36,6 +36,12 @@
                     </select>
                 </div>
 
+                <div style="margin-bottom: 14px;">
+                    <label for="fee">Registration Fee (INR)</label>
+                    <input type="number" name="fee" id="fee" step="0.01" min="0"
+                           value="{{ event.fee|default:'0.00' }}" required>
+                </div>
+
                 <!-- Registration Links -->
                 <h2 style="margin-top: 24px;">Registration</h2>
                 <div style="margin-bottom: 14px;">

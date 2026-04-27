@@ -114,8 +114,70 @@ def application_detail(request, pk):
     return render(request, 'exchanges/application_detail.html', {
         'application': application,
         'messages': application.messages.all().order_by('sent_at'),
-        'is_owner': application.listing.school == user_school
+        'is_owner': application.listing.school == user_school,
+        'is_applicant': application.applicant_school == user_school
     })
+
+@login_required
+def complete_exchange(request, pk):
+    application = get_object_or_404(ExchangeApplication, pk=pk)
+    user_school = request.user.profile.school
+
+    if application.listing.school != user_school:
+        messages.error(request, "You do not have permission to complete this exchange.")
+        return redirect('my_exchanges')
+
+    if application.status != 'approved':
+        messages.error(request, "Only approved exchanges can be marked as completed.")
+        return redirect('application_detail', pk=pk)
+
+    if request.method == 'POST':
+        application.status = 'completed'
+        application.save()
+        application.listing.status = 'completed'
+        application.listing.save()
+
+        create_notification(
+            recipient=application.applicant_school.profiles.filter(role__in=['admin', 'school_leader']).first().user,
+            title='Exchange Completed',
+            message=f"The exchange for {application.listing} has been marked as completed by {application.listing.school.name}.",
+            level='success',
+            target_url=f"/exchanges/application/{application.pk}/"
+        )
+        messages.success(request, "Exchange marked as completed.")
+    return redirect('application_detail', pk=pk)
+
+@login_required
+def submit_exchange_feedback(request, pk):
+    application = get_object_or_404(ExchangeApplication, pk=pk)
+    user_school = request.user.profile.school
+
+    if application.listing.school != user_school and application.applicant_school != user_school:
+        messages.error(request, "You do not have permission to submit feedback for this exchange.")
+        return redirect('my_exchanges')
+
+    if application.status != 'completed':
+        messages.error(request, "Feedback can only be submitted for completed exchanges.")
+        return redirect('application_detail', pk=pk)
+
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        comments = request.POST.get('comments')
+
+        if not rating:
+            messages.error(request, "Rating is required.")
+            return redirect('application_detail', pk=pk)
+
+        if user_school == application.listing.school:
+            application.listing_school_feedback_rating = rating
+            application.listing_school_feedback_comments = comments
+            messages.success(request, "Your feedback for the listing school has been submitted.")
+        elif user_school == application.applicant_school:
+            application.applicant_school_feedback_rating = rating
+            application.applicant_school_feedback_comments = comments
+            messages.success(request, "Your feedback for the applicant school has been submitted.")
+        application.save()
+    return redirect('application_detail', pk=pk)
 
 @login_required
 def create_listing(request):

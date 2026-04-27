@@ -140,6 +140,7 @@ def event_create(request):
         category = request.POST.get('category')
         registration_link = request.POST.get('registration_link')
         razorpay_payment_link = request.POST.get('razorpay_payment_link', '')
+        fee = request.POST.get('fee', 0.00)
 
         event = Event.objects.create(
             school=profile.school,
@@ -149,6 +150,7 @@ def event_create(request):
             category=category,
             registration_link=registration_link,
             razorpay_payment_link=razorpay_payment_link,
+            fee=fee,
         )
 
         # Handle file uploads
@@ -186,6 +188,7 @@ def event_edit(request, pk):
         event.razorpay_payment_link = request.POST.get('razorpay_payment_link', event.razorpay_payment_link)
         event.winners = request.POST.get('winners', event.winners)
         event.is_active = request.POST.get('is_active') == 'on'
+        event.fee = request.POST.get('fee', event.fee)
 
         # Handle file uploads
         if request.FILES.get('brochure'):
@@ -244,7 +247,7 @@ def register_for_event(request, pk):
             data={'registration_id': registration.pk},
         )
 
-    fee_in_paise = settings.COMPETITION_REGISTRATION_FEE * 100
+    fee_in_paise = int(event.fee * 100) # Use event's specific fee
     if settings.RAZORPAY_KEY_ID and settings.RAZORPAY_SECRET:
         try:
             client = razorpay.Client(
@@ -265,7 +268,7 @@ def register_for_event(request, pk):
                 'razorpay_key_id': settings.RAZORPAY_KEY_ID,
                 'order_id': order_data.get('id', ''),
                 'amount': order_data.get('amount', 0),
-                'amount_rupees': settings.COMPETITION_REGISTRATION_FEE,
+                'amount_rupees': event.fee, # Use event's specific fee
             }
             return render(request, 'competitions/payment_checkout.html', context)
 

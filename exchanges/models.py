@@ -37,6 +37,12 @@ class ExchangeApplication(models.Model):
     status = models.CharField(max_length=20, choices=APPLICATION_STATUS, default='pending')
     applied_at = models.DateTimeField(auto_now_add=True)
 
+    # Feedback fields
+    listing_school_feedback_rating = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Rating from listing school (1-5)")
+    listing_school_feedback_comments = models.TextField(blank=True, help_text="Comments from listing school")
+    applicant_school_feedback_rating = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Rating from applicant school (1-5)")
+    applicant_school_feedback_comments = models.TextField(blank=True, help_text="Comments from applicant school")
+
     def __str__(self):
         return f"Application for {self.listing} from {self.applicant_school.name}"
 

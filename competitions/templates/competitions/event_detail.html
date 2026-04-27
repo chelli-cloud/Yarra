@@ -142,6 +142,73 @@
                     <p class="mb-1"><strong>Results:</strong> {{ event.results.count }}</p>
                     <p class="mb-0"><strong>Status:</strong> {% if event.is_active %}Active{% else %}Inactive{% endif %}</p>
             </div>
+
+            <!-- Registered Students and Attendance -->
+            {% if can_edit or profile.role == 'teacher' %}
+            <div class="card">
+                <h2>Registered Students</h2>
+                {% if event.registrations.all %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>School</th>
+                            <th>Attended</th>
+                            {% if can_edit %}<th>Actions</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reg in event.registrations.all %}
+                        <tr>
+                            <td>{{ reg.student.get_full_name|default:reg.student.username }}</td>
+                            <td>{{ reg.student.profile.school.name }}</td>
+                            <td>
+                                <span class="badge {% if reg.attended %}success{% else %}warning{% endif %}">
+                                    {% if reg.attended %}Yes{% else %}No{% endif %}
+                                </span>
+                            </td>
+                            {% if can_edit %}
+                            <td>
+                                <form action="{% url 'mark_attendance' reg.pk %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="button small secondary">
+                                        {% if reg.attended %}Mark Absent{% else %}Mark Attended{% endif %}
+                                    </button>
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No students registered yet.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Feedback Section -->
+            {% if registration and registration.attended %}
+            <div class="card">
+                <h2>Submit Feedback</h2>
+                <form action="{% url 'submit_feedback' registration.pk %}" method="post">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 12px;">
+                        <label for="rating">Rating (1-5)</label>
+                        <input type="number" id="rating" name="rating" min="1" max="5" value="{{ registration.feedback_rating|default:'3' }}" required>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label for="comments">Comments</label>
+                        <textarea id="comments" name="comments" rows="4">{{ registration.feedback_comments|default:'' }}</textarea>
+                    </div>
+                    <button type="submit">Submit Feedback</button>
+                </form>
+            </div>
+            {% elif registration and not registration.attended %}
+            <div class="card">
+                <p class="muted">You must attend the event to submit feedback.</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}
