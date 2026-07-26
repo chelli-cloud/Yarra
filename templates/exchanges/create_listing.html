@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Post Exchange Opportunity | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Post an Exchange Opportunity</h1>
+        <p class="muted">Share a teacher or student exchange opportunity with the Yarra network.</p>
+    </div>
+    <a href="{% url 'exchange_list' %}" class="button secondary">Cancel</a>
+</div>
+
+<div class="card" style="max-width: 640px;">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="type">Exchange Type</label>
+            <select id="type" name="type" required>
+                {% for value, label in types %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="subject_grade">Subject / Grade</label>
+            <input type="text" id="subject_grade" name="subject_grade" placeholder="e.g. Mathematics - Grade 10" required>
+        </div>
+        <div class="grid two">
+            <div class="form-group">
+                <label for="start_date">Start Date</label>
+                <input type="date" id="start_date" name="start_date" required>
+            </div>
+            <div class="form-group">
+                <label for="end_date">End Date</label>
+                <input type="date" id="end_date" name="end_date" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="duration">Duration (short description)</label>
+            <input type="text" id="duration" name="duration" placeholder="e.g. 1 week, 1 semester" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="objectives">Objectives</label>
+            <textarea id="objectives" name="objectives" rows="3"></textarea>
+        </div>
+        <div class="button-group">
+            <button type="submit" class="button primary">Post Opportunity</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

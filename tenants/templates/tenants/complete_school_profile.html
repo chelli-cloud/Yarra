@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Complete School Profile | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Complete Your School Profile</h1>
+        <p class="muted">A few more details for {{ school.name }} before your profile is complete.</p>
+    </div>
+</div>
+
+<div class="card">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<span class="help-text">{{ field.help_text }}</span>{% endif %}
+                {% for error in field.errors %}<span class="badge error" style="margin-top: 4px;">{{ error }}</span>{% endfor %}
+            </div>
+        {% endfor %}
+
+        <div class="form-group">
+            <label for="documents">Curriculum Planning Documents (up to 10 files)</label>
+            <input type="file" id="documents" name="documents" multiple>
+            <span class="help-text">Year plans, lesson plans, and similar documents.</span>
+            {% if school.documents.all %}
+                <ul style="margin-top: 8px;">
+                    {% for doc in school.documents.all %}
+                        <li><a href="{{ doc.file.url }}">{{ doc.file.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="button primary">Save Profile</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

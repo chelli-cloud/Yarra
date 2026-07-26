@@ -21,6 +21,12 @@ class Event(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     category = models.CharField(max_length=20, choices=EventCategory.choices)
+
+    class FeeType(models.TextChoices):
+        PRO_BONO = 'pro_bono', 'Pro Bono (Yarra Members)'
+        PAID = 'paid', 'Paid (Non Members)'
+
+    fee_type = models.CharField(max_length=20, choices=FeeType.choices, default=FeeType.PAID)
     fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Registration fee for the event")
 
     # M6 Requirements
@@ -45,6 +51,9 @@ class Event(models.Model):
     winners = models.TextField(blank=True, help_text="Finalist/winner details")
     winning_resources = models.FileField(upload_to='competitions/winners/', blank=True, null=True,
                                          help_text="Photos, PDFs of winning entries")
+    recording_url = models.URLField(blank=True, help_text="Link to the event recording")
+    presentation_file = models.FileField(upload_to='competitions/presentations/', blank=True, null=True,
+                                         help_text="Presentation/slides from the event")
 
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)

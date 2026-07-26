@@ -3,6 +3,15 @@
 {% block title %}{{ school.name }} | Yarra{% endblock %}
 
 {% block content %}
+{% if can_edit and not school.profile_completed %}
+<div class="card" style="background: #fffbeb; border: 1px solid #fde68a; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+    <div>
+        <strong>Your school profile isn't complete yet.</strong>
+        <p class="muted" style="margin: 4px 0 0;">Add the remaining details so other schools and Yarra can get to know you.</p>
+    </div>
+    <a href="{% url 'complete_school_profile' %}" class="button primary">Complete Profile</a>
+</div>
+{% endif %}
 <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 32px; border: none; box-shadow: var(--shadow-lg);">
     <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); padding: 60px 40px; color: white; text-align: center; position: relative;">
         <div style="position: relative; z-index: 2;">
@@ -104,6 +113,14 @@
                     </div>
                 </div>
             </div>
+            {% if school.website or school.linkedin_url or school.facebook_url or school.instagram_url %}
+            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; flex-wrap: wrap;">
+                {% if school.website %}<a href="{{ school.website }}" target="_blank" rel="noopener" class="button ghost">🌐 Website</a>{% endif %}
+                {% if school.linkedin_url %}<a href="{{ school.linkedin_url }}" target="_blank" rel="noopener" class="button ghost">💼 LinkedIn</a>{% endif %}
+                {% if school.facebook_url %}<a href="{{ school.facebook_url }}" target="_blank" rel="noopener" class="button ghost">📘 Facebook</a>{% endif %}
+                {% if school.instagram_url %}<a href="{{ school.instagram_url }}" target="_blank" rel="noopener" class="button ghost">📷 Instagram</a>{% endif %}
+            </div>
+            {% endif %}
         </div>
 
         <!-- Membership Status -->
@@ -145,7 +162,10 @@
             <p class="muted" style="margin-bottom: 24px;">You have administrative access to update this school's public profile.</p>
             <div style="display: flex; flex-direction: column; gap: 12px;">
                 <a href="{% url 'school_profile' %}?edit=1" class="button primary" style="width: 100%; padding: 14px;">Edit School Profile</a>
+                <a href="{% url 'complete_school_profile' %}" class="button secondary" style="width: 100%; padding: 14px;">Complete Extended Profile</a>
                 <a href="{% url 'invite_user' %}" class="button secondary" style="width: 100%; padding: 14px;">Invite Staff/Student</a>
+                <a href="{% url 'user_management' %}" class="button secondary" style="width: 100%; padding: 14px;">User Management</a>
+                <a href="{% url 'record_payment' %}" class="button secondary" style="width: 100%; padding: 14px;">Record Payment</a>
             </div>
         </div>
         {% endif %}

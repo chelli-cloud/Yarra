@@ -464,6 +464,12 @@
                 <a href="{% url 'vendor_list' %}" class="nav-link">
                     <span class="nav-icon">🛒</span> Vendors
                 </a>
+                <a href="{% url 'exchange_list' %}" class="nav-link">
+                    <span class="nav-icon">🔄</span> Student Exchange
+                </a>
+                <a href="{% url 'content_library' %}" class="nav-link">
+                    <span class="nav-icon">📚</span> Content Library
+                </a>
                 {% if user_profile.role != 'student' %}
                     <a href="{% url 'teachers_hub' %}" class="nav-link">
                         <span class="nav-icon">👨‍🏫</span> Teachers Hub
@@ -473,10 +479,27 @@
                     <a href="{% url 'leadership_connect' %}" class="nav-link">
                         <span class="nav-icon">🤝</span> Leadership
                     </a>
+                    {% if not request.user.is_superuser %}
+                        <a href="{% url 'user_management' %}" class="nav-link">
+                            <span class="nav-icon">👥</span> User Management
+                        </a>
+                        <a href="{% url 'record_payment' %}" class="nav-link">
+                            <span class="nav-icon">💳</span> Record Payment
+                        </a>
+                    {% endif %}
                 {% endif %}
                 {% if request.user.is_superuser %}
                     <a href="{% url 'master_dashboard' %}" class="nav-link">
                         <span class="nav-icon">🔑</span> Master Dashboard
+                    </a>
+                    <a href="{% url 'user_management' %}" class="nav-link">
+                        <span class="nav-icon">👥</span> User Management
+                    </a>
+                    <a href="{% url 'record_payment' %}" class="nav-link">
+                        <span class="nav-icon">💳</span> Record Payment
+                    </a>
+                    <a href="{% url 'content_review_queue' %}" class="nav-link">
+                        <span class="nav-icon">✅</span> Content Review
                     </a>
                 {% endif %}
             </nav>

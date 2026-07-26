@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit Content | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Submit Content</h1>
+        <p class="muted">Your submission will show as "Pending Yarra Verification" and become visible to other schools once approved.</p>
+    </div>
+    <a href="{% url 'content_library' %}" class="button secondary">Back to Library</a>
+</div>
+
+<div class="card" style="max-width: 720px;">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<span class="help-text">{{ field.help_text }}</span>{% endif %}
+                {% for error in field.errors %}<span class="badge error" style="margin-top: 4px;">{{ error }}</span>{% endfor %}
+            </div>
+        {% endfor %}
+        <div class="button-group">
+            <button type="submit" class="button primary">Submit for Verification</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

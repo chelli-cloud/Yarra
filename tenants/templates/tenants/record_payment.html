@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Record Payment | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Record Payment</h1>
+        <p class="muted">Log a manual payment, including cheque, bank transfer, or cash.</p>
+    </div>
+</div>
+
+<div class="card" style="max-width: 560px;">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<span class="badge error" style="margin-top: 4px;">{{ error }}</span>{% endfor %}
+            </div>
+        {% endfor %}
+        <div class="button-group">
+            <button type="submit" class="button primary">Record Payment</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

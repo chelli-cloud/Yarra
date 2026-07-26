@@ -22,7 +22,26 @@ class School(models.Model):
     address = models.TextField(blank=True)
     phone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
-    
+
+    # Location (filled by Super Admin at creation)
+    state = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+
+    # Yarra Coordinator (filled by Super Admin at creation)
+    yarra_coordinator_name = models.CharField(max_length=150, blank=True)
+    yarra_coordinator_email = models.EmailField(blank=True)
+    yarra_coordinator_phone = models.CharField(max_length=20, blank=True)
+
+    # Social / web links
+    website = models.URLField(blank=True)
+    linkedin_url = models.URLField(blank=True)
+    facebook_url = models.URLField(blank=True)
+    instagram_url = models.URLField(blank=True)
+
+    # Two-stage registration: Super Admin creates the basic record,
+    # School Admin completes the rest via SchoolProfileExtended.
+    profile_completed = models.BooleanField(default=False)
+
     # Membership fields
     membership_tier = models.CharField(max_length=20, choices=MEMBERSHIP_TIERS, default='free')
     membership_expiry = models.DateField(null=True, blank=True)
@@ -31,6 +50,101 @@ class School(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class SchoolProfileExtended(models.Model):
+    """Extended school registration data collected from School Admin after account creation."""
+    school = models.OneToOneField(School, on_delete=models.CASCADE, related_name='extended_profile')
+
+    year_established = models.PositiveIntegerField(null=True, blank=True)
+    district = models.CharField(max_length=150, blank=True)
+    association = models.CharField(max_length=200, blank=True, help_text="Association the school is a part of")
+    curriculum_adopted = models.CharField(max_length=200, blank=True)
+    grades_offered = models.CharField(max_length=200, blank=True)
+    total_learners = models.PositiveIntegerField(null=True, blank=True)
+
+    form_filled_by_name = models.CharField(max_length=150, blank=True)
+    form_filled_by_designation = models.CharField(max_length=150, blank=True)
+    form_filled_by_contact = models.CharField(max_length=20, blank=True)
+
+    parent_demographics = models.TextField(blank=True)
+    fee_structure = models.TextField(blank=True)
+
+    principal_name = models.CharField(max_length=150, blank=True)
+    principal_contact = models.CharField(max_length=20, blank=True)
+    communication_email = models.EmailField(blank=True)
+
+    curriculum_change_reason = models.TextField(blank=True)
+    vision_5_years = models.TextField(blank=True)
+    success_definition = models.TextField(blank=True)
+    curriculum_expectations = models.TextField(blank=True)
+
+    built_up_area = models.CharField(max_length=100, blank=True)
+    classroom_infrastructure = models.TextField(blank=True)
+    pd_programs_impact = models.TextField(blank=True)
+    immediate_support_needed = models.TextField(blank=True)
+
+    curriculum_planning_description = models.TextField(blank=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Extended profile - {self.school.name}"
+
+
+class SchoolDocument(models.Model):
+    """Curriculum planning documents uploaded as part of the extended school profile (max 10)."""
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='documents')
+    file = models.FileField(upload_to='school_documents/')
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.school.name} - {self.file.name}"
+
+
+class Payment(models.Model):
+    METHOD_CHOICES = [
+        ('online', 'Online'),
+        ('cheque', 'Cheque'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('cash', 'Cash'),
+        ('other', 'Other'),
+    ]
+
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='payments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    method = models.CharField(max_length=20, choices=METHOD_CHOICES, default='online')
+    recorded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    notes = models.TextField(blank=True)
+    receipt = models.FileField(upload_to='payment_receipts/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.school.name} - {self.amount} ({self.method})"
+
+
+class ActivityLog(models.Model):
+    """Records user activity for the User Management 'what they have done' view
+    and to drive Super Admin notifications on any app activity."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activity_logs')
+    school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True, blank=True, related_name='activity_logs')
+    description = models.CharField(max_length=255)
+    target_url = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['school', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username}: {self.description}"
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

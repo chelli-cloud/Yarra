@@ -5,8 +5,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse
 from django.db.models import Count
-from .models import School, Profile, ReviewCycle, TeacherResource, DiscussionThread, ThreadReply, Notification, Invitation
-from .forms import InvitationForm, SchoolRegistrationForm, UserRegistrationForm
+from .models import (
+    School, Profile, ReviewCycle, TeacherResource, DiscussionThread, ThreadReply,
+    Notification, Invitation, SchoolProfileExtended, SchoolDocument, Payment, ActivityLog,
+)
+from .forms import (
+    InvitationForm, SchoolRegistrationForm, UserRegistrationForm,
+    SchoolCreateForm, SchoolProfileExtendedForm, PaymentForm,
+)
+from .notifications import log_activity
 import secrets
 
 REVIEW_STATUS_DISPLAY = {
@@ -20,6 +27,8 @@ REVIEW_CYCLE_CREATE_ROLES = ['school_leader', 'admin']
 REVIEW_EDIT_ROLES = ['school_leader', 'admin', 'pl_teacher']
 RESOURCE_UPLOAD_ROLES = ['school_leader', 'admin', 'pl_teacher']
 LEADERSHIP_ROLES = ['school_leader', 'admin']
+MAX_ADMINS_PER_SCHOOL = 2
+MAX_TEACHERS_PER_SCHOOL = 5
 
 @login_required
 def my_profile(request):
@@ -199,11 +208,12 @@ def master_dashboard(request):
     
     total_users = sum(s.user_count for s in schools)
     total_events = sum(s.event_count for s in schools)
-    
+
     return render(request, 'tenants/master_dashboard.html', {
         'schools': schools,
         'total_users': total_users,
         'total_events': total_events,
+        'all_schools': schools,  # for the school-selector dropdown to view an individual school's dashboard
     })
 
 @login_required
@@ -235,10 +245,15 @@ def school_profile(request, pk=None):
         school.key_offerings = request.POST.get('key_offerings', school.key_offerings)
         if request.FILES.get('logo'):
             school.logo = request.FILES['logo']
+        school.website = request.POST.get('website', school.website)
+        school.linkedin_url = request.POST.get('linkedin_url', school.linkedin_url)
+        school.facebook_url = request.POST.get('facebook_url', school.facebook_url)
+        school.instagram_url = request.POST.get('instagram_url', school.instagram_url)
         school.save()
+        log_activity(request.user, f"Updated school profile for {school.name}", school=school)
         messages.success(request, f"Profile for {school.name} updated successfully!")
         return redirect('school_profile')
-    
+
     template = 'tenants/school_profile_edit.html' if (is_edit_mode and can_edit) else 'tenants/school_profile.html'
     return render(request, template, {'school': school, 'can_edit': can_edit})
 
@@ -320,7 +335,8 @@ def review_dashboard(request):
 
 @login_required
 def invite_user(request):
-    """Module M1: School Admin invites teachers and students."""
+    """Module M1: School Admin invites teachers and students.
+    Enforces max 2 admins and max 5 teachers per school."""
     profile = get_object_or_404(Profile, user=request.user)
     if profile.role not in ['admin', 'school_leader']:
         return render(request, 'tenants/access_denied.html', status=403)
@@ -328,21 +344,38 @@ def invite_user(request):
     if request.method == 'POST':
         form = InvitationForm(request.POST)
         if form.is_valid():
+            role = form.cleaned_data['role']
+            # Count existing members plus pending (unused) invitations, since a
+            # Profile isn't created until the invitation is accepted.
+            if role in PROFILE_EDIT_ROLES:
+                current_admins = Profile.objects.filter(school=profile.school, role__in=PROFILE_EDIT_ROLES).count()
+                pending_admins = Invitation.objects.filter(school=profile.school, role__in=PROFILE_EDIT_ROLES, is_used=False).count()
+                if current_admins + pending_admins >= MAX_ADMINS_PER_SCHOOL:
+                    messages.error(request, f"This school already has the maximum of {MAX_ADMINS_PER_SCHOOL} admins.")
+                    return render(request, 'tenants/invite_user.html', {'form': form})
+            elif role == 'teacher':
+                current_teachers = Profile.objects.filter(school=profile.school, role='teacher').count()
+                pending_teachers = Invitation.objects.filter(school=profile.school, role='teacher', is_used=False).count()
+                if current_teachers + pending_teachers >= MAX_TEACHERS_PER_SCHOOL:
+                    messages.error(request, f"This school already has the maximum of {MAX_TEACHERS_PER_SCHOOL} teachers. Remove one before adding another.")
+                    return render(request, 'tenants/invite_user.html', {'form': form})
+
             invitation = form.save(commit=False)
             invitation.school = profile.school
             invitation.token = secrets.token_urlsafe(32)
             invitation.invited_by = request.user
             invitation.save()
-            
+
             # In a real app, send email here
             invite_url = request.build_absolute_uri(
                 reverse('accept_invitation', args=[invitation.token])
             )
+            log_activity(request.user, f"Invited {invitation.email} as {invitation.get_role_display()}", school=profile.school)
             messages.success(request, f"Invitation created! Link: {invite_url}")
             return redirect('school_profile')
     else:
         form = InvitationForm()
-    
+
     return render(request, 'tenants/invite_user.html', {'form': form})
 
 def accept_invitation(request, token):
@@ -398,12 +431,133 @@ def school_registration(request):
             )
             
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            log_activity(user, f"Registered school {school.name}", school=school)
             messages.success(request, f"Welcome! {school.name} has been registered.")
             return redirect('school_profile')
     else:
         form = SchoolRegistrationForm()
-    
+
     return render(request, 'tenants/school_registration.html', {'form': form})
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def admin_create_school(request):
+    """Super Admin creates the minimal school record (name, state/country, Yarra Coordinator),
+    then invites the coordinator to complete the rest of the profile."""
+    if request.method == 'POST':
+        form = SchoolCreateForm(request.POST)
+        if form.is_valid():
+            school = form.save()
+
+            invitation = Invitation.objects.create(
+                school=school,
+                email=school.yarra_coordinator_email,
+                role='admin',
+                token=secrets.token_urlsafe(32),
+                invited_by=request.user,
+            )
+            invite_url = request.build_absolute_uri(
+                reverse('accept_invitation', args=[invitation.token])
+            )
+            log_activity(request.user, f"Created school {school.name}", school=school)
+            messages.success(request, f"{school.name} created. Invitation link for the Yarra Coordinator: {invite_url}")
+            return redirect('master_dashboard')
+    else:
+        form = SchoolCreateForm()
+
+    return render(request, 'tenants/admin_create_school.html', {'form': form})
+
+
+@login_required
+def complete_school_profile(request):
+    """School Admin completes the extended profile (Google Form fields) after account creation."""
+    profile = get_object_or_404(Profile, user=request.user)
+    if profile.role not in PROFILE_EDIT_ROLES:
+        return render(request, 'tenants/access_denied.html', status=403)
+
+    school = profile.school
+    extended, _ = SchoolProfileExtended.objects.get_or_create(school=school)
+
+    if request.method == 'POST':
+        form = SchoolProfileExtendedForm(request.POST, instance=extended)
+        if form.is_valid():
+            form.save()
+
+            uploaded_files = request.FILES.getlist('documents')
+            if len(uploaded_files) > 10:
+                messages.error(request, "You can upload up to 10 files.")
+                return render(request, 'tenants/complete_school_profile.html', {'form': form, 'school': school})
+            for f in uploaded_files:
+                SchoolDocument.objects.create(school=school, file=f, uploaded_by=request.user)
+
+            school.profile_completed = True
+            school.save(update_fields=['profile_completed'])
+            log_activity(request.user, f"Completed school profile for {school.name}", school=school)
+            messages.success(request, "School profile completed. Thank you!")
+            return redirect('school_profile')
+    else:
+        form = SchoolProfileExtendedForm(instance=extended)
+
+    return render(request, 'tenants/complete_school_profile.html', {'form': form, 'school': school})
+
+
+@login_required
+def user_management(request):
+    """Super Admin: view users across all schools. School Admin: view own school's users only."""
+    if request.user.is_superuser:
+        profiles = Profile.objects.select_related('user', 'school').order_by('school__name', 'role')
+        recent_activity = ActivityLog.objects.select_related('user', 'school')[:50]
+        return render(request, 'tenants/user_management.html', {
+            'profiles': profiles,
+            'recent_activity': recent_activity,
+            'max_admins': MAX_ADMINS_PER_SCHOOL,
+            'max_teachers': MAX_TEACHERS_PER_SCHOOL,
+        })
+
+    profile = get_object_or_404(Profile, user=request.user)
+    if profile.role not in PROFILE_EDIT_ROLES:
+        return render(request, 'tenants/access_denied.html', status=403)
+
+    profiles = Profile.objects.filter(school=profile.school).select_related('user').order_by('role')
+    recent_activity = ActivityLog.objects.filter(school=profile.school).select_related('user', 'school')[:50]
+
+    return render(request, 'tenants/user_management.html', {
+        'profiles': profiles,
+        'recent_activity': recent_activity,
+        'max_admins': MAX_ADMINS_PER_SCHOOL,
+        'max_teachers': MAX_TEACHERS_PER_SCHOOL,
+    })
+
+
+@login_required
+def record_payment(request):
+    """School Admin and Super Admin can record a manual payment (including cheque)."""
+    profile = None
+    if not request.user.is_superuser:
+        profile = get_object_or_404(Profile, user=request.user)
+        if profile.role not in PROFILE_EDIT_ROLES:
+            return render(request, 'tenants/access_denied.html', status=403)
+
+    if request.method == 'POST':
+        form = PaymentForm(request.POST, request.FILES)
+        if not request.user.is_superuser:
+            form.data = form.data.copy()
+            form.data['school'] = profile.school_id
+        if form.is_valid():
+            payment = form.save(commit=False)
+            if not request.user.is_superuser:
+                payment.school = profile.school
+            payment.recorded_by = request.user
+            payment.save()
+            log_activity(request.user, f"Recorded a {payment.get_method_display()} payment of {payment.amount} for {payment.school.name}", school=payment.school)
+            messages.success(request, "Payment recorded.")
+            return redirect('user_management')
+    else:
+        form = PaymentForm()
+        if not request.user.is_superuser:
+            del form.fields['school']
+
+    return render(request, 'tenants/record_payment.html', {'form': form})
 
 @login_required
 def create_review_cycle(request):

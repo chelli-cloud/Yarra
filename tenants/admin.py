@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import School, Profile, ReviewCycle, Notification, TeacherResource, DiscussionThread, ThreadReply
+from .models import (
+    School, Profile, ReviewCycle, Notification, TeacherResource, DiscussionThread, ThreadReply,
+    Invitation, SchoolProfileExtended, SchoolDocument, Payment, ActivityLog,
+)
 
 @admin.register(School)
 class SchoolAdmin(admin.ModelAdmin):
@@ -41,4 +44,38 @@ class NotificationAdmin(admin.ModelAdmin):
     list_display = ('recipient', 'title', 'level', 'is_read', 'created_at')
     list_filter = ('level', 'is_read')
     search_fields = ('recipient__username', 'title', 'message')
+    readonly_fields = ('created_at',)
+
+
+@admin.register(Invitation)
+class InvitationAdmin(admin.ModelAdmin):
+    list_display = ('email', 'school', 'role', 'is_used', 'created_at')
+    list_filter = ('role', 'is_used')
+    search_fields = ('email', 'school__name')
+
+
+@admin.register(SchoolProfileExtended)
+class SchoolProfileExtendedAdmin(admin.ModelAdmin):
+    list_display = ('school', 'district', 'curriculum_adopted', 'total_learners', 'updated_at')
+    search_fields = ('school__name', 'district')
+
+
+@admin.register(SchoolDocument)
+class SchoolDocumentAdmin(admin.ModelAdmin):
+    list_display = ('school', 'file', 'uploaded_by', 'uploaded_at')
+    list_filter = ('school',)
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('school', 'amount', 'method', 'recorded_by', 'created_at')
+    list_filter = ('method',)
+    search_fields = ('school__name',)
+
+
+@admin.register(ActivityLog)
+class ActivityLogAdmin(admin.ModelAdmin):
+    list_display = ('user', 'school', 'description', 'created_at')
+    list_filter = ('school',)
+    search_fields = ('user__username', 'description')
     readonly_fields = ('created_at',)

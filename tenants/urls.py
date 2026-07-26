@@ -20,4 +20,8 @@ urlpatterns = [
     path('register-school/', views.school_registration, name='school_registration'),
     path('notifications/', views.notification_list, name='notification_list'),
     path('notifications/<int:pk>/read/', views.mark_notification_read, name='mark_notification_read'),
+    path('schools/new/', views.admin_create_school, name='admin_create_school'),
+    path('schools/complete-profile/', views.complete_school_profile, name='complete_school_profile'),
+    path('users/', views.user_management, name='user_management'),
+    path('payments/record/', views.record_payment, name='record_payment'),
 ]

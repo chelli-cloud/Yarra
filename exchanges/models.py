@@ -15,6 +15,8 @@ class ExchangeListing(models.Model):
     type = models.CharField(max_length=10, choices=ExchangeType.choices)
     subject_grade = models.CharField(max_length=200, help_text="e.g. Mathematics - Grade 10")
     duration = models.CharField(max_length=100, help_text="e.g. 1 week, 1 semester")
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
     description = models.TextField()
     objectives = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=ExchangeStatus.choices, default='open')

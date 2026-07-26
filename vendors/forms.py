@@ -1,5 +1,5 @@
 from django import forms
-from .models import Vendor, VendorPromotion, VendorEnquiry
+from .models import Vendor, VendorPromotion, VendorEnquiry, EventInterest
 
 class VendorRegistrationForm(forms.ModelForm):
     class Meta:
@@ -28,6 +28,14 @@ class VendorEnquiryForm(forms.ModelForm):
     class Meta:
         model = VendorEnquiry
         fields = ['subject', 'message']
+        widgets = {
+            'message': forms.Textarea(attrs={'rows': 4}),
+        }
+
+class EventInterestForm(forms.ModelForm):
+    class Meta:
+        model = EventInterest
+        fields = ['message']
         widgets = {
             'message': forms.Textarea(attrs={'rows': 4}),
         }

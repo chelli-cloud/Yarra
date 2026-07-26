@@ -80,6 +80,21 @@
             </div>
             {% endif %}
 
+            <!-- Recording & Presentation -->
+            {% if event.recording_url or event.presentation_file %}
+            <div class="card">
+                <h2>Recording & Presentation</h2>
+                <div class="button-group">
+                    {% if event.recording_url %}
+                    <a href="{{ event.recording_url }}" target="_blank" rel="noopener" class="button secondary">Watch Recording</a>
+                    {% endif %}
+                    {% if event.presentation_file %}
+                    <a href="{{ event.presentation_file.url }}" class="button secondary" download>Download Presentation</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Winners Section -->
             {% if event.winners or event.winning_resources %}
             <div class="card">
@@ -141,6 +156,15 @@
                     <p class="mb-1"><strong>Registrations:</strong> {{ event.registrations.count }}</p>
                     <p class="mb-1"><strong>Results:</strong> {{ event.results.count }}</p>
                     <p class="mb-0"><strong>Status:</strong> {% if event.is_active %}Active{% else %}Inactive{% endif %}</p>
+                    {% if can_edit or request.user.is_superuser %}
+                    <a href="{% url 'event_participants' event.pk %}" class="button secondary" style="margin-top: 12px; width: 100%;">View Participant Records</a>
+                    {% endif %}
+            </div>
+
+            <div class="card">
+                    <h2>Vendors</h2>
+                    <p class="muted">Vendors can apply to be part of this event.</p>
+                    <a href="{% url 'event_interest_submit' event.pk %}" class="button secondary" style="width: 100%;">Apply as a Vendor</a>
             </div>
 
             <!-- Registered Students and Attendance -->

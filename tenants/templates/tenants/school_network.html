@@ -26,6 +26,9 @@
             <h3 style="margin-bottom: 8px; font-size: 1.2rem;">{{ s.name }}</h3>
             <div style="margin-bottom: 16px;">
                 <span class="badge info">{{ s.location|default:"Global Network" }}</span>
+                {% if s.state or s.country %}
+                    <span class="badge secondary">{{ s.state }}{% if s.state and s.country %}, {% endif %}{{ s.country }}</span>
+                {% endif %}
             </div>
             
             <div style="flex-grow: 1; margin-bottom: 24px; font-size: 0.9rem; line-height: 1.6;">
@@ -36,6 +39,8 @@
             <div style="width: 100%; padding-top: 20px; border-top: 1px solid var(--border);">
                 {% if s.pk == user_school.pk %}
                     <a href="{% url 'school_profile' %}" class="button primary" style="width: 100%;">My School Profile</a>
+                {% elif s.yarra_coordinator_email %}
+                    <a href="mailto:{{ s.yarra_coordinator_email }}" class="button secondary" style="width: 100%;">Contact via Yarra Coordinator</a>
                 {% else %}
                     <span class="muted" style="font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
                         <span style="font-size: 1rem;">🔒</span> Private Profile

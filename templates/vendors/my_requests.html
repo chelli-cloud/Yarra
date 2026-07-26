@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}My Requests | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>My Requests</h1>
+        <p class="muted">Enquiries your school has sent to vendors in the Marketplace.</p>
+    </div>
+    <a href="{% url 'vendor_list' %}" class="button secondary">Back to Marketplace</a>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Vendor</th><th>Subject</th><th>Status</th><th>Sent</th></tr></thead>
+            <tbody>
+                {% for enquiry in enquiries %}
+                <tr>
+                    <td><a href="{% url 'vendor_detail' enquiry.vendor.pk %}">{{ enquiry.vendor.name }}</a></td>
+                    <td>{{ enquiry.subject }}</td>
+                    <td><span class="badge {% if enquiry.status == 'responded' %}success{% else %}warning{% endif %}">{{ enquiry.get_status_display }}</span></td>
+                    <td>{{ enquiry.created_at|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="text-align: center; padding: 32px;"><p class="muted">No requests sent yet.</p></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -9,7 +9,7 @@ from django.conf import settings
 import razorpay
 
 from tenants.models import Profile, School, Notification
-from tenants.notifications import create_notification
+from tenants.notifications import create_notification, log_activity
 from tenants.utils import generate_invoice_pdf
 from .models import Event, EventCategory, StudentRegistration, PaymentStatus, CompetitionResult
 
@@ -127,6 +127,29 @@ def event_detail(request, pk):
 
 
 @login_required
+def event_participants(request, pk):
+    """Participant Records for a concluded event: registrations grouped by school.
+    Reached from the Events tab, per Chelli's request to move this off the dashboard."""
+    profile = _get_user_profile(request)
+    event = get_object_or_404(Event.objects.select_related('school'), pk=pk)
+
+    if not (request.user.is_superuser or (profile and profile.school_id == event.school_id)):
+        messages.error(request, "You don't have permission to view participant records for this event.")
+        return redirect('event_list')
+
+    registrations = StudentRegistration.objects.filter(event=event).select_related('student__profile__school')
+    by_school = registrations.values('student__profile__school__name').annotate(count=Count('id')).order_by('-count')
+
+    context = {
+        'event': event,
+        'registrations': registrations,
+        'by_school': by_school,
+        'total_participants': registrations.count(),
+    }
+    return render(request, 'competitions/event_participants.html', context)
+
+
+@login_required
 def event_create(request):
     """Create a new event (Teachers, Admins, School Leaders only)."""
     profile = _get_user_profile(request)
@@ -140,7 +163,8 @@ def event_create(request):
         category = request.POST.get('category')
         registration_link = request.POST.get('registration_link')
         razorpay_payment_link = request.POST.get('razorpay_payment_link', '')
-        fee = request.POST.get('fee', 0.00)
+        fee_type = request.POST.get('fee_type', Event.FeeType.PAID)
+        fee = 0.00 if fee_type == Event.FeeType.PRO_BONO else request.POST.get('fee', 0.00)
 
         event = Event.objects.create(
             school=profile.school,
@@ -150,6 +174,7 @@ def event_create(request):
             category=category,
             registration_link=registration_link,
             razorpay_payment_link=razorpay_payment_link,
+            fee_type=fee_type,
             fee=fee,
         )
 
@@ -160,6 +185,7 @@ def event_create(request):
             event.payment_qr = request.FILES['payment_qr']
 
         event.save()
+        log_activity(request.user, f"Created event '{title}'", school=profile.school, target_url=event.get_absolute_url())
         messages.success(request, f"Event '{title}' created successfully!")
         return redirect('event_detail', pk=event.pk)
 
@@ -188,7 +214,9 @@ def event_edit(request, pk):
         event.razorpay_payment_link = request.POST.get('razorpay_payment_link', event.razorpay_payment_link)
         event.winners = request.POST.get('winners', event.winners)
         event.is_active = request.POST.get('is_active') == 'on'
-        event.fee = request.POST.get('fee', event.fee)
+        event.fee_type = request.POST.get('fee_type', event.fee_type)
+        event.fee = 0.00 if event.fee_type == Event.FeeType.PRO_BONO else request.POST.get('fee', event.fee)
+        event.recording_url = request.POST.get('recording_url', event.recording_url)
 
         # Handle file uploads
         if request.FILES.get('brochure'):
@@ -197,6 +225,8 @@ def event_edit(request, pk):
             event.payment_qr = request.FILES['payment_qr']
         if request.FILES.get('winning_resources'):
             event.winning_resources = request.FILES['winning_resources']
+        if request.FILES.get('presentation_file'):
+            event.presentation_file = request.FILES['presentation_file']
 
         event.save()
         messages.success(request, f"Event '{event.title}' updated successfully!")
@@ -246,6 +276,7 @@ def register_for_event(request, pk):
             target_url=event.get_absolute_url() if hasattr(event, 'get_absolute_url') else f"/competitions/{event.pk}/",
             data={'registration_id': registration.pk},
         )
+    log_activity(request.user, f"Registered for event '{event.title}'", school=profile.school, target_url=event.get_absolute_url())
 
     fee_in_paise = int(event.fee * 100) # Use event's specific fee
     if settings.RAZORPAY_KEY_ID and settings.RAZORPAY_SECRET:
@@ -326,6 +357,7 @@ def verify_payment(request):
                 target_url=f"/competitions/{registration.event.pk}/",
                 data={'registration_id': registration.pk},
             )
+        log_activity(request.user, f"Payment verified for event '{registration.event.title}'", school=registration.event.school)
 
         return JsonResponse({'status': 'success', 'redirect_url': reverse('registration_confirm', args=[registration.event.pk])})
     except razorpay.errors.SignatureVerificationError:

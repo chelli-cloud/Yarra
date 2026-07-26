@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Content Review | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Content Review</h1>
+        <p class="muted">Content pending Yarra verification before it becomes visible to other schools.</p>
+    </div>
+</div>
+
+<div class="card">
+    {% for item in pending_items %}
+    <div style="padding: 20px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+        <div>
+            <h3 style="margin-bottom: 4px;">{{ item.title }}</h3>
+            <p class="muted" style="margin: 0;">{{ item.get_content_type_display }} · Submitted by {{ item.author.username|default:"Unknown" }}</p>
+            <p style="margin: 8px 0 0;">{{ item.body|truncatewords:25 }}</p>
+        </div>
+        <form method="post" action="{% url 'content_review_decide' item.slug %}" style="display: flex; gap: 8px; flex-shrink: 0;">
+            {% csrf_token %}
+            <button type="submit" name="decision" value="approve" class="button success">Approve</button>
+            <button type="submit" name="decision" value="reject" class="button danger">Reject</button>
+        </form>
+    </div>
+    {% empty %}
+    <p class="muted" style="text-align: center; padding: 32px;">Nothing pending verification.</p>
+    {% endfor %}
+</div>
+{% endblock %}

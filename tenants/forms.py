@@ -1,7 +1,7 @@
 from django import apps
 from django import forms
 from django.contrib.auth.models import User
-from .models import School, Profile, Invitation
+from .models import School, Profile, Invitation, SchoolProfileExtended, Payment
 
 class SchoolRegistrationForm(forms.ModelForm):
     admin_email = forms.EmailField(label="Admin Email")
@@ -10,6 +10,23 @@ class SchoolRegistrationForm(forms.ModelForm):
     class Meta:
         model = School
         fields = ['name', 'address', 'phone', 'email', 'location', 'contact_person', 'logo']
+
+class SchoolCreateForm(forms.ModelForm):
+    """Super Admin's minimal school creation form (name, state/country, Yarra Coordinator)."""
+
+    class Meta:
+        model = School
+        fields = ['name', 'state', 'country', 'yarra_coordinator_name', 'yarra_coordinator_email', 'yarra_coordinator_phone']
+
+class SchoolProfileExtendedForm(forms.ModelForm):
+    class Meta:
+        model = SchoolProfileExtended
+        exclude = ['school', 'updated_at']
+
+class PaymentForm(forms.ModelForm):
+    class Meta:
+        model = Payment
+        fields = ['school', 'amount', 'method', 'notes', 'receipt']
 
 class InvitationForm(forms.ModelForm):
     class Meta:

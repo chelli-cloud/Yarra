@@ -52,6 +52,22 @@
                 <label for="address">Full Address</label>
                 <textarea id="address" name="address">{{ school.address }}</textarea>
             </div>
+            <div>
+                <label for="website">Website</label>
+                <input type="url" id="website" name="website" value="{{ school.website }}">
+            </div>
+            <div>
+                <label for="linkedin_url">LinkedIn</label>
+                <input type="url" id="linkedin_url" name="linkedin_url" value="{{ school.linkedin_url }}">
+            </div>
+            <div>
+                <label for="facebook_url">Facebook</label>
+                <input type="url" id="facebook_url" name="facebook_url" value="{{ school.facebook_url }}">
+            </div>
+            <div>
+                <label for="instagram_url">Instagram</label>
+                <input type="url" id="instagram_url" name="instagram_url" value="{{ school.instagram_url }}">
+            </div>
         </div>
         <div style="margin-top: 18px;">
             <button type="submit">Update School Profile</button>

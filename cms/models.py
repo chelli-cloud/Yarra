@@ -33,6 +33,7 @@ class ContentItem(models.Model):
 
     STATUS_CHOICES = [
         ('draft', 'Draft'),
+        ('pending_verification', 'Pending Yarra Verification'),
         ('published', 'Published'),
         ('archived', 'Archived'),
     ]

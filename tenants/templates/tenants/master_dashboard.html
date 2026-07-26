@@ -9,8 +9,19 @@
         <p class="muted">Manage all registered schools and their activities.</p>
     </div>
     <div class="button-group">
-        <a href="{% url 'admin:tenants_school_add' %}" class="button primary">Add New School</a>
+        <a href="{% url 'admin_create_school' %}" class="button primary">Add New School</a>
+        <a href="{% url 'user_management' %}" class="button secondary">User Management</a>
     </div>
+</div>
+
+<div class="card" style="margin-bottom: 32px;">
+    <label for="school-selector">View an Individual School's Dashboard</label>
+    <select id="school-selector" onchange="if(this.value){window.location.href='/school-profile/' + this.value + '/';}">
+        <option value="">Select a school...</option>
+        {% for school in all_schools %}
+            <option value="{{ school.pk }}">{{ school.name }}</option>
+        {% endfor %}
+    </select>
 </div>
 
 <div class="grid three" style="margin-bottom: 32px;">

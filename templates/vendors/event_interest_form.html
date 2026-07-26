@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply for {{ event.title }} | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Apply to Participate</h1>
+        <p class="muted">{{ event.title }}</p>
+    </div>
+    <a href="{% url 'event_detail' event.pk %}" class="button secondary">Back to Event</a>
+</div>
+
+<div class="card" style="max-width: 560px;">
+    {% if approved_vendors %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="vendor">Vendor</label>
+            <select id="vendor" name="vendor" required>
+                <option value="">Select the vendor you represent</option>
+                {% for vendor in approved_vendors %}
+                    <option value="{{ vendor.pk }}">{{ vendor.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+            </div>
+        {% endfor %}
+        <div class="button-group">
+            <button type="submit" class="button primary">Submit Interest</button>
+        </div>
+    </form>
+    {% else %}
+    <p class="muted">No approved vendors available yet. Sign up and get approved first.</p>
+    <a href="{% url 'vendor_signup' %}" class="button primary">Vendor Sign Up</a>
+    {% endif %}
+</div>
+{% endblock %}

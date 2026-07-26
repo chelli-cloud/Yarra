@@ -37,9 +37,18 @@
                 </div>
 
                 <div style="margin-bottom: 14px;">
+                    <label for="fee_type">Registration Fee Type</label>
+                    <select name="fee_type" id="fee_type" required>
+                        <option value="pro_bono" {% if event.fee_type == 'pro_bono' %}selected{% endif %}>Pro Bono (Yarra Members)</option>
+                        <option value="paid" {% if event.fee_type == 'paid' or not event.fee_type %}selected{% endif %}>Paid (Non Members)</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 14px;">
                     <label for="fee">Registration Fee (INR)</label>
                     <input type="number" name="fee" id="fee" step="0.01" min="0"
-                           value="{{ event.fee|default:'0.00' }}" required>
+                           value="{{ event.fee|default:'0.00' }}">
+                    <p class="muted">Ignored when the fee type is Pro Bono.</p>
                 </div>
 
                 <!-- Registration Links -->
@@ -89,6 +98,19 @@
                     <p class="muted">Current: {{ event.winning_resources.name }}</p>
                     {% endif %}
                     <input type="file" name="winning_resources" id="winning_resources">
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label for="recording_url">Recording Link</label>
+                    <input type="url" name="recording_url" id="recording_url" value="{{ event.recording_url|default:'' }}">
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label for="presentation_file">Presentation / Slides</label>
+                    {% if event.presentation_file %}
+                    <p class="muted">Current: {{ event.presentation_file.name }}</p>
+                    {% endif %}
+                    <input type="file" name="presentation_file" id="presentation_file">
                 </div>
 
                 <div style="margin-bottom: 14px;">

@@ -9,10 +9,13 @@
             <h1>Content Library</h1>
             <p class="muted">Explore educational resources, articles, and recorded sessions.</p>
         </div>
-        <form method="get" class="search-form" style="display: flex; gap: 8px;">
-            <input type="text" name="q" placeholder="Search content..." value="{{ query|default:'' }}" class="form-control" style="width: 250px;">
-            <button type="submit" class="button primary">Search</button>
-        </form>
+        <div style="display: flex; gap: 8px;">
+            <form method="get" class="search-form" style="display: flex; gap: 8px;">
+                <input type="text" name="q" placeholder="Search content..." value="{{ query|default:'' }}" class="form-control" style="width: 250px;">
+                <button type="submit" class="button primary">Search</button>
+            </form>
+            <a href="{% url 'content_submit' %}" class="button secondary">Submit Content</a>
+        </div>
     </div>
 
     <!-- Filters -->

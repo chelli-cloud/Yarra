@@ -3,7 +3,17 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import ExchangeListing, ExchangeApplication, ExchangeMessage, ExchangeType, ExchangeStatus
 from tenants.models import Profile, Notification
-from tenants.notifications import create_notification
+from tenants.notifications import create_notification, log_activity
+
+# Per feedback: School Admin sees Open/Applied/Matched applications; Teacher additionally sees Under Review.
+SCHOOL_ADMIN_APPLICATION_STATUSES = ['pending', 'approved']
+TEACHER_APPLICATION_STATUSES = ['pending', 'under_review', 'approved']
+
+
+def _visible_application_statuses(profile):
+    if profile.role == 'teacher':
+        return TEACHER_APPLICATION_STATUSES
+    return SCHOOL_ADMIN_APPLICATION_STATUSES
 
 @login_required
 def exchange_list(request):
@@ -39,6 +49,7 @@ def exchange_detail(request, pk):
                 applicant_school=user_school,
                 message=message
             )
+            log_activity(request.user, f"Applied to exchange '{listing}'", school=user_school)
             messages.success(request, "Your application for the exchange has been submitted.")
             return redirect('exchange_detail', pk=pk)
             
@@ -50,10 +61,14 @@ def exchange_detail(request, pk):
 
 @login_required
 def my_exchanges(request):
-    user_school = request.user.profile.school
+    profile = request.user.profile
+    user_school = profile.school
     my_listings = ExchangeListing.objects.filter(school=user_school)
-    my_applications = ExchangeApplication.objects.filter(applicant_school=user_school).select_related('listing', 'listing__school')
-    
+    my_applications = ExchangeApplication.objects.filter(
+        applicant_school=user_school,
+        status__in=_visible_application_statuses(profile),
+    ).select_related('listing', 'listing__school')
+
     return render(request, 'exchanges/my_exchanges.html', {
         'my_listings': my_listings,
         'my_applications': my_applications
@@ -186,14 +201,17 @@ def create_listing(request):
         return redirect('exchange_list')
         
     if request.method == 'POST':
-        ExchangeListing.objects.create(
+        listing = ExchangeListing.objects.create(
             school=request.user.profile.school,
             type=request.POST.get('type'),
             subject_grade=request.POST.get('subject_grade'),
             duration=request.POST.get('duration'),
+            start_date=request.POST.get('start_date') or None,
+            end_date=request.POST.get('end_date') or None,
             description=request.POST.get('description'),
             objectives=request.POST.get('objectives', '')
         )
+        log_activity(request.user, f"Posted exchange listing '{listing}'", school=listing.school)
         messages.success(request, "Your exchange listing has been posted.")
         return redirect('my_exchanges')
         

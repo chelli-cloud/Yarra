@@ -49,12 +49,33 @@ class VendorPromotion(models.Model):
         return f"{self.vendor.name} - {self.title}"
 
 class VendorEnquiry(models.Model):
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('responded', 'Responded'),
+    ]
+
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='enquiries')
     school = models.ForeignKey('tenants.School', on_delete=models.CASCADE)
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     subject = models.CharField(max_length=200)
     message = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Enquiry for {self.vendor.name} from {self.school.name}"
+
+
+class EventInterest(models.Model):
+    """A vendor marking interest in participating in an upcoming Yarra event."""
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='event_interests')
+    event = models.ForeignKey('competitions.Event', on_delete=models.CASCADE, related_name='vendor_interests')
+    submitted_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    message = models.TextField(blank=True, help_text="Why the vendor wants to be involved")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.vendor.name} interested in {self.event.title}"
