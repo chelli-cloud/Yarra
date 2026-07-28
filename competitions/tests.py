@@ -36,6 +36,8 @@ class CompetitionModuleTests(TestCase):
         self.other_student = User.objects.create_user(username='otherstudent', password='test@1234')
         Profile.objects.create(user=self.other_student, school=self.other_school, role='student')
 
+        self.superuser = User.objects.create_superuser(username='superadmin', email='super@example.com', password='test@1234')
+
         self.event = Event.objects.create(
             school=self.school,
             created_by=self.teacher,
@@ -46,8 +48,8 @@ class CompetitionModuleTests(TestCase):
             is_active=True,
         )
 
-    def test_teacher_can_create_event(self):
-        self.client.login(username='teacher', password='test@1234')
+    def test_superuser_can_create_event(self):
+        self.client.login(username='superadmin', password='test@1234')
         response = self.client.post(reverse('event_create'), {
             'title': 'Science Fair',
             'description': 'Students present projects',
@@ -57,7 +59,21 @@ class CompetitionModuleTests(TestCase):
         })
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(Event.objects.filter(title='Science Fair', school=self.school).exists())
+        self.assertTrue(Event.objects.filter(title='Science Fair').exists())
+
+    def test_teacher_cannot_create_event(self):
+        # Events are Yarra-wide now; only Super Admin creates them.
+        self.client.login(username='teacher', password='test@1234')
+        response = self.client.post(reverse('event_create'), {
+            'title': 'Blocked Event',
+            'description': 'Should not be created',
+            'category': 'active',
+            'registration_link': 'https://forms.example.com/blocked',
+            'razorpay_payment_link': '',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Event.objects.filter(title='Blocked Event').exists())
 
     def test_student_cannot_create_event(self):
         self.client.login(username='student', password='test@1234')
@@ -66,7 +82,7 @@ class CompetitionModuleTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Event.objects.filter(title='Blocked Event').exists())
 
-    def test_student_can_register_only_for_own_school_event(self):
+    def test_student_can_register_for_event(self):
         self.client.login(username='student', password='test@1234')
         response = self.client.post(reverse('register_for_event', args=[self.event.pk]), {})
 
@@ -74,12 +90,29 @@ class CompetitionModuleTests(TestCase):
         registration = StudentRegistration.objects.get(event=self.event, student=self.student)
         self.assertEqual(registration.payment_status, PaymentStatus.PENDING)
 
-    def test_other_school_student_cannot_register(self):
+    def test_other_school_student_can_register(self):
+        # Events are Yarra-wide now; any school's students can register for any active event.
         self.client.login(username='otherstudent', password='test@1234')
         response = self.client.post(reverse('register_for_event', args=[self.event.pk]), {})
 
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(StudentRegistration.objects.filter(event=self.event, student=self.other_student).exists())
+        self.assertTrue(StudentRegistration.objects.filter(event=self.event, student=self.other_student).exists())
+
+    def test_superuser_can_delete_event_and_cascades_registrations(self):
+        StudentRegistration.objects.create(event=self.event, student=self.student)
+        self.client.login(username='superadmin', password='test@1234')
+        response = self.client.post(reverse('event_delete', args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Event.objects.filter(pk=self.event.pk).exists())
+        self.assertFalse(StudentRegistration.objects.filter(student=self.student).exists())
+
+    def test_teacher_cannot_delete_event(self):
+        self.client.login(username='teacher', password='test@1234')
+        response = self.client.post(reverse('event_delete', args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Event.objects.filter(pk=self.event.pk).exists())
 
     def test_result_creation_notifies_school_leader(self):
         CompetitionResult.objects.create(

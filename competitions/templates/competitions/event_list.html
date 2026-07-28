@@ -33,7 +33,7 @@
                     {% endif %}
                 </div>
                 <h3 style="margin: 16px 0 8px;">{{ event.title }}</h3>
-                <p class="muted">{{ event.school.name }}</p>
+                <p class="muted">{{ event.school.name|default:"Yarra Consortium" }}</p>
                 <p>{{ event.description|truncatewords:24 }}</p>
                 <p class="muted">Created {{ event.created_at|date:"M d, Y" }}</p>
                 <div style="margin-top: 16px;">

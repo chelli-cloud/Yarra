@@ -16,7 +16,8 @@ class Event(models.Model):
     Represents a school competition/event in one of three tracks:
     Yarra Action (sports), Yarra Spotlight (arts/culture), Yarra Active (ongoing programs).
     """
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='events')
+    # Events are Yarra-wide (created only by Super Admin); school is now optional context, not ownership.
+    school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True, blank=True, related_name='events')
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_events')
     title = models.CharField(max_length=200)
     description = models.TextField()

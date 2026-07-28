@@ -12,6 +12,7 @@ urlpatterns = [
     path('webhooks/razorpay/', razorpay_webhook, name='razorpay_webhook'),
     path('<int:pk>/', views.event_detail, name='event_detail'),
     path('<int:pk>/edit/', views.event_edit, name='event_edit'),
+    path('<int:pk>/delete/', views.event_delete, name='event_delete'),
     path('<int:pk>/participants/', views.event_participants, name='event_participants'),
     path('<int:pk>/register/', views.register_for_event, name='register_for_event'),
     path('registration/<int:pk>/confirm/', views.registration_confirm, name='registration_confirm'),

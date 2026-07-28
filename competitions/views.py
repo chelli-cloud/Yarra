@@ -15,9 +15,10 @@ from .models import Event, EventCategory, StudentRegistration, PaymentStatus, Co
 
 
 # Permission constants following existing tenants pattern
-EVENT_CREATE_ROLES = ['admin', 'teacher', 'school_leader']
-EVENT_EDIT_ROLES = ['admin', 'teacher', 'school_leader']
 SL_ANALYTICS_ROLES = ['school_leader']
+
+
+STAFF_ROLES = ['admin', 'school_leader', 'teacher', 'pl_teacher']
 
 
 def _get_user_profile(request):
@@ -27,33 +28,22 @@ def _get_user_profile(request):
     return Profile.objects.filter(user=request.user).first()
 
 
-def _can_create_event(profile):
-    return profile and profile.role in EVENT_CREATE_ROLES
-
-
-def _can_edit_event(profile, event, user):
-    if not profile or profile.role not in EVENT_EDIT_ROLES:
-        return False
-    # Users can only edit events from their own school
-    if profile.school_id != event.school_id:
-        return False
-    if profile.role in ['admin', 'school_leader']:
-        return True
-    return event.created_by == user
+def _is_school_staff(profile):
+    return bool(profile and profile.role in STAFF_ROLES)
 
 
 @login_required
 def event_list(request):
-    """Browse all active events, excluding opportunities."""
+    """Browse all active Yarra events, excluding opportunities."""
     profile = _get_user_profile(request)
-    if not profile:
+    if not profile and not request.user.is_superuser:
         messages.error(request, "Please complete your profile to access events.")
         return redirect('school_profile')
 
     category = request.GET.get('category')
-    
-    # Exclude 'OPPORTUNITY' for the main competitions list
-    events = Event.objects.filter(is_active=True, school=profile.school).exclude(category=EventCategory.OPPORTUNITY)
+
+    # Events are Yarra-wide: every school sees every active event.
+    events = Event.objects.filter(is_active=True).exclude(category=EventCategory.OPPORTUNITY)
 
     if category:
         events = events.filter(category=category)
@@ -67,7 +57,7 @@ def event_list(request):
         'events': events,
         'categories': comp_categories,
         'current_category': category,
-        'can_create_event': _can_create_event(profile),
+        'can_create_event': request.user.is_superuser,
         'profile': profile,
     }
     return render(request, 'competitions/event_list.html', context)
@@ -75,23 +65,22 @@ def event_list(request):
 
 @login_required
 def opportunity_list(request):
-    """Browse all active opportunities for the school."""
+    """Browse all active opportunities across the Yarra network."""
     profile = _get_user_profile(request)
-    if not profile:
+    if not profile and not request.user.is_superuser:
         messages.error(request, "Please complete your profile.")
         return redirect('school_profile')
 
-    # Only show 'OPPORTUNITY' category
+    # Events are Yarra-wide: every school sees every active opportunity.
     events = Event.objects.filter(
-        is_active=True, 
-        school=profile.school, 
+        is_active=True,
         category=EventCategory.OPPORTUNITY
     ).select_related('school', 'created_by')
 
     context = {
         'events': events,
         'profile': profile,
-        'can_create_event': _can_create_event(profile),
+        'can_create_event': request.user.is_superuser,
         'is_opportunity_view': True,
     }
     return render(request, 'competitions/opportunity_list.html', context)
@@ -101,18 +90,18 @@ def opportunity_list(request):
 def event_detail(request, pk):
     """View event details, download brochure, see payment info."""
     profile = _get_user_profile(request)
-    if not profile:
+    if not profile and not request.user.is_superuser:
         messages.error(request, "Please complete your profile.")
         return redirect('school_profile')
 
-    # Users can only view details of events from their own school
+    # Events are Yarra-wide: any authenticated user can view any event's details.
     event = get_object_or_404(
-        Event.objects.filter(school=profile.school).select_related('school', 'created_by').prefetch_related('results', 'registrations'),
+        Event.objects.select_related('school', 'created_by').prefetch_related('results', 'registrations'),
         pk=pk
     )
 
     registration = None
-    if profile.role == 'student':
+    if profile and profile.role == 'student':
         registration = StudentRegistration.objects.filter(
             event=event, student=request.user
         ).first()
@@ -121,7 +110,8 @@ def event_detail(request, pk):
         'event': event,
         'registration': registration,
         'profile': profile,
-        'can_edit': _can_edit_event(profile, event, request.user),
+        'can_edit': request.user.is_superuser,
+        'can_manage_participants': request.user.is_superuser or _is_school_staff(profile),
     }
     return render(request, 'competitions/event_detail.html', context)
 
@@ -133,7 +123,9 @@ def event_participants(request, pk):
     profile = _get_user_profile(request)
     event = get_object_or_404(Event.objects.select_related('school'), pk=pk)
 
-    if not (request.user.is_superuser or (profile and profile.school_id == event.school_id)):
+    # Events are Yarra-wide now: any staff role (or Super Admin) can view participant records,
+    # not just staff from the event's original school.
+    if not (request.user.is_superuser or _is_school_staff(profile)):
         messages.error(request, "You don't have permission to view participant records for this event.")
         return redirect('event_list')
 
@@ -151,9 +143,8 @@ def event_participants(request, pk):
 
 @login_required
 def event_create(request):
-    """Create a new event (Teachers, Admins, School Leaders only)."""
-    profile = _get_user_profile(request)
-    if not _can_create_event(profile):
+    """Create a new Yarra event (Super Admin only)."""
+    if not request.user.is_superuser:
         messages.error(request, "You don't have permission to create events.")
         return redirect('event_list')
 
@@ -167,7 +158,6 @@ def event_create(request):
         fee = 0.00 if fee_type == Event.FeeType.PRO_BONO else request.POST.get('fee', 0.00)
 
         event = Event.objects.create(
-            school=profile.school,
             created_by=request.user,
             title=title,
             description=description,
@@ -185,7 +175,7 @@ def event_create(request):
             event.payment_qr = request.FILES['payment_qr']
 
         event.save()
-        log_activity(request.user, f"Created event '{title}'", school=profile.school, target_url=event.get_absolute_url())
+        log_activity(request.user, f"Created event '{title}'", target_url=event.get_absolute_url())
         messages.success(request, f"Event '{title}' created successfully!")
         return redirect('event_detail', pk=event.pk)
 
@@ -198,11 +188,10 @@ def event_create(request):
 
 @login_required
 def event_edit(request, pk):
-    """Edit an existing event (creator, Admins only)."""
-    profile = _get_user_profile(request)
+    """Edit an existing event (Super Admin only)."""
     event = get_object_or_404(Event, pk=pk)
 
-    if not _can_edit_event(profile, event, request.user):
+    if not request.user.is_superuser:
         messages.error(request, "You don't have permission to edit this event.")
         return redirect('event_detail', pk=event.pk)
 
@@ -241,6 +230,22 @@ def event_edit(request, pk):
 
 
 @login_required
+@require_POST
+def event_delete(request, pk):
+    """Delete an event (Super Admin only). Registrations and results cascade-delete with it."""
+    if not request.user.is_superuser:
+        messages.error(request, "You don't have permission to delete events.")
+        return redirect('event_detail', pk=pk)
+
+    event = get_object_or_404(Event, pk=pk)
+    title = event.title
+    event.delete()
+    log_activity(request.user, f"Deleted event '{title}'")
+    messages.success(request, f"Event '{title}' and all its registrations/results have been deleted.")
+    return redirect('event_list')
+
+
+@login_required
 def register_for_event(request, pk):
     """Handle student registration after Google Form submission."""
     profile = _get_user_profile(request)
@@ -249,9 +254,6 @@ def register_for_event(request, pk):
         return redirect('event_list')
 
     event = get_object_or_404(Event, pk=pk, is_active=True)
-    if profile.school_id != event.school_id:
-        messages.error(request, "Students can only register for their own school's events.")
-        return redirect('event_detail', pk=event.pk)
 
     existing = StudentRegistration.objects.filter(event=event, student=request.user).first()
     if existing:
@@ -380,34 +382,25 @@ def sl_analytics(request):
 
     school = profile.school
 
-    # Analytics queries
-    total_events = Event.objects.filter(school=school).count()
-    active_events = Event.objects.filter(school=school, is_active=True).count()
-    total_registrations = StudentRegistration.objects.filter(event__school=school).count()
-    verified_registrations = StudentRegistration.objects.filter(
-        event__school=school, payment_status=PaymentStatus.VERIFIED
-    ).count()
-    pending_registrations = StudentRegistration.objects.filter(
-        event__school=school, payment_status=PaymentStatus.PENDING
-    ).count()
+    # Events are Yarra-wide now, so "school analytics" means this school's own participation
+    # in Yarra events, not events the school owns.
+    school_registrations = StudentRegistration.objects.filter(student__profile__school=school)
+
+    events_participated = Event.objects.filter(registrations__in=school_registrations).distinct()
+    total_events = events_participated.count()
+    active_events = events_participated.filter(is_active=True).count()
+    total_registrations = school_registrations.count()
+    verified_registrations = school_registrations.filter(payment_status=PaymentStatus.VERIFIED).count()
+    pending_registrations = school_registrations.filter(payment_status=PaymentStatus.PENDING).count()
     total_prizes = CompetitionResult.objects.filter(school=school).count()
 
-    # Events by category
-    events_by_category = Event.objects.filter(school=school).values('category').annotate(
-        count=Count('id')
-    )
+    # Events by category (this school's participation, by category)
+    events_by_category = events_participated.values('category').annotate(count=Count('id'))
 
     # Recent results
     recent_results = CompetitionResult.objects.filter(
         school=school
     ).select_related('event')[:10]
-
-    # Teacher participation (who created events)
-    teacher_participation = Event.objects.filter(
-        school=school, created_by__isnull=False
-    ).values('created_by__username').annotate(
-        events_created=Count('id')
-    ).order_by('-events_created')[:5]
 
     context = {
         'school': school,
@@ -419,34 +412,38 @@ def sl_analytics(request):
         'total_prizes': total_prizes,
         'events_by_category': list(events_by_category),
         'recent_results': recent_results,
-        'teacher_participation': teacher_participation,
     }
     return render(request, 'competitions/sl_analytics.html', context)
 
 
 @login_required
 def create_competition_result(request, event_pk):
-    """Add a competition result (winner/finalist announcement)."""
+    """Add a competition result for your own school's student (staff roles or Super Admin)."""
     profile = _get_user_profile(request)
     event = get_object_or_404(Event, pk=event_pk)
 
-    if not _can_edit_event(profile, event, request.user):
+    if not (request.user.is_superuser or _is_school_staff(profile)):
         messages.error(request, "You don't have permission to add results.")
         return redirect('event_detail', pk=event.pk)
 
     if request.method == 'POST':
         student_name = request.POST.get('student_name')
         prize = request.POST.get('prize')
+        # Superusers may specify a school explicitly; staff always report for their own school.
+        school = profile.school if profile else None
+        if request.user.is_superuser:
+            school = School.objects.filter(pk=request.POST.get('school')).first() or school
 
-        if student_name and prize:
-            # Result can only be added for the event's school (which is the user's school)
+        if student_name and prize and school:
             CompetitionResult.objects.create(
                 event=event,
-                school=event.school,
+                school=school,
                 student_name=student_name,
                 prize=prize,
             )
             messages.success(request, f"Result added: {student_name} - {prize}")
+        elif not school:
+            messages.error(request, "Could not determine which school this result belongs to.")
 
     return redirect('event_detail', pk=event.pk)
 
@@ -482,11 +479,13 @@ def download_invoice(request, pk):
 
 @login_required
 def mark_attendance(request, pk):
-    """M6: Mark a student as attended."""
+    """M6: Mark a student as attended (staff can only mark their own school's students)."""
     profile = _get_user_profile(request)
     registration = get_object_or_404(StudentRegistration, pk=pk)
-    
-    if not _can_edit_event(profile, registration.event, request.user):
+
+    student_profile = Profile.objects.filter(user=registration.student).first()
+    is_own_school_staff = _is_school_staff(profile) and student_profile and profile.school_id == student_profile.school_id
+    if not (request.user.is_superuser or is_own_school_staff):
         messages.error(request, "You don't have permission to mark attendance.")
         return redirect('event_detail', pk=registration.event.pk)
     
