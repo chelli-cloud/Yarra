@@ -78,10 +78,9 @@ class Command(BaseCommand):
                 user.save()
                 
                 profile = Profile.objects.create(
-                    user=user, 
-                    school=school, 
+                    user=user,
+                    school=school,
                     role=role,
-                    registration_no=f"2313{random.randint(100000, 999999)}",
                     date_of_birth="2005-02-18",
                     mobile_no="7305774555",
                     campus="Main Campus",
@@ -90,9 +89,6 @@ class Command(BaseCommand):
                     admission_date="2023-07-01",
                     permanent_address="No 30a, Thirumurthy Street, Tnagar, Chennai-600017",
                     current_address="No 30a, Thirumurthy Street, Tnagar, Chennai-600017",
-                    father_name="A Radha Krishnan",
-                    father_contact="9500047531",
-                    mother_name="Chelli Umashankar",
                 )
                 users.append(user)
 
