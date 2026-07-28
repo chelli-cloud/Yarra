@@ -9,15 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
-            --primary-light: #eff6ff;
-            --sidebar-bg: #0f172a;
-            --sidebar-hover: rgba(255, 255, 255, 0.05);
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --bg-body: #f8fafc;
-            --border: #e2e8f0;
+            --primary: #1F6F76;
+            --primary-dark: #154F54;
+            --primary-light: #E3F5F3;
+            --sidebar-bg: #0B2E31;
+            --sidebar-hover: rgba(255, 255, 255, 0.06);
+            --text-main: #10282A;
+            --text-muted: #5C7A7A;
+            --bg-body: #F3FAF9;
+            --border: #D7EBE9;
             --white: #ffffff;
             --radius-sm: 8px;
             --radius-md: 12px;
@@ -52,17 +52,27 @@
             z-index: 100; 
             box-shadow: var(--shadow-lg);
         }
-        .sidebar-brand { 
-            padding: 32px 24px; 
-            font-size: 1.5rem; 
-            font-weight: 800; 
-            color: white; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            border-bottom: 1px solid rgba(255,255,255,0.1); 
+        .sidebar-brand {
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        .sidebar-brand img { height: 32px; filter: brightness(0) invert(1); }
+        .sidebar-brand img { height: 32px; }
+        .sidebar-brand .wordmark {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: #7FD9CE;
+        }
+        .sidebar-brand .subtitle {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+        }
         
         .sidebar-nav { 
             flex-grow: 1; 
@@ -260,7 +270,8 @@
         .badge.success { background: #dcfce7; color: #166534; }
         .badge.warning { background: #fef9c3; color: #854d0e; }
         .badge.error { background: #fee2e2; color: #991b1b; }
-        .badge.info { background: #e0f2fe; color: #075985; }
+        .badge.info { background: #D7EEEC; color: #12595E; }
+        .badge.secondary { background: #EEF6F5; color: #3F6E6E; }
 
         /* Forms */
         .form-group, div:has(> label) { margin-bottom: 24px; }
@@ -434,12 +445,8 @@
     {% if request.user.is_authenticated %}
         <aside class="sidebar">
             <div class="sidebar-brand">
-                {% if user_school.logo %}
-                    <img src="{{ user_school.logo.url }}" alt="Logo">
-                {% else %}
-                    <span>🎓</span>
-                {% endif %}
-                <span>Yarra</span>
+                <span class="wordmark">YARRA</span>
+                <span class="subtitle">Education Group</span>
             </div>
             
             <nav class="sidebar-nav">
