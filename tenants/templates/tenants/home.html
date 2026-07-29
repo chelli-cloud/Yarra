@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Yarra - A Network of Connected Schools{% endblock %}
 
 {% block guest_content %}
 <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #F3FAF9 0%, #E3F5F3 100%); padding: 20px;">
     <div class="card" style="max-width: 500px; width: 100%; text-align: center; padding: 60px 40px; box-shadow: var(--shadow-lg);">
-        <h1 style="font-size: 3rem; letter-spacing: 0.03em; margin-bottom: 4px; color: var(--primary);">YARRA</h1>
-        <p style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 24px;">Education Group</p>
+        <img src="{% static 'images/yarra-logo.jpeg' %}" alt="Yarra Education Group" style="max-width: 320px; width: 100%; border-radius: var(--radius-md); margin-bottom: 24px;">
         <p class="muted" style="font-size: 1.25rem; margin-bottom: 40px;">A Network of Connected Schools</p>
         
         <div style="display: flex; flex-direction: column; gap: 16px;">

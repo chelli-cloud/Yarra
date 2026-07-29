@@ -176,6 +176,7 @@ COMPETITION_REGISTRATION_FEE = int(os.getenv('COMPETITION_REGISTRATION_FEE', '50
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media Storage (S3 if in production, local if in development)

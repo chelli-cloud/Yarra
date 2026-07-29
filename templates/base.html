@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -53,13 +54,19 @@
             box-shadow: var(--shadow-lg);
         }
         .sidebar-brand {
-            padding: 28px 24px;
+            padding: 24px;
             display: flex;
-            flex-direction: column;
-            gap: 2px;
+            align-items: center;
+            justify-content: center;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        .sidebar-brand img { height: 32px; }
+        .sidebar-brand img {
+            width: 100%;
+            max-width: 200px;
+            height: auto;
+            border-radius: var(--radius-md);
+            display: block;
+        }
         .sidebar-brand .wordmark {
             font-size: 1.6rem;
             font-weight: 800;
@@ -445,8 +452,7 @@
     {% if request.user.is_authenticated %}
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <span class="wordmark">YARRA</span>
-                <span class="subtitle">Education Group</span>
+                <img src="{% static 'images/yarra-logo.jpeg' %}" alt="Yarra Education Group">
             </div>
             
             <nav class="sidebar-nav">
