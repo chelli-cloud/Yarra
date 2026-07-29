@@ -83,6 +83,16 @@
                             <span>{{ vendor.contact_phone }}</span>
                         </div>
                         {% endif %}
+                        {% if vendor.brochure %}
+                        <div class="mt-2">
+                            <a href="{{ vendor.brochure.url }}" target="_blank" class="button secondary small">Download Brochure</a>
+                        </div>
+                        {% endif %}
+                        {% if vendor.catalog %}
+                        <div class="mt-2">
+                            <a href="{{ vendor.catalog.url }}" target="_blank" class="button secondary small">Download Catalog</a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

@@ -232,8 +232,12 @@ def mark_notification_read(request, pk):
 @login_required
 def school_network(request):
     """Module 6: Global Directory - view across all tenants."""
-    schools = School.objects.all().order_by('name')
-    return render(request, 'tenants/school_network.html', {'schools': schools})
+    profile = Profile.objects.filter(user=request.user).first()
+    schools = School.objects.select_related('extended_profile').all().order_by('name')
+    return render(request, 'tenants/school_network.html', {
+        'schools': schools,
+        'can_contact_schools': bool(profile and profile.role in PROFILE_EDIT_ROLES),
+    })
 
 @login_required
 def review_dashboard(request):
@@ -340,9 +344,12 @@ def accept_invitation(request, token):
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
+            # Enforce the account's email matches the invitation, not whatever was typed
+            # (School Admin login must match the Yarra Coordinator email on file).
+            user.email = invitation.email
             user.set_password(form.cleaned_data['password'])
             user.save()
-            
+
             Profile.objects.create(
                 user=user,
                 school=invitation.school,

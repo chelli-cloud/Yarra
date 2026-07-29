@@ -14,7 +14,9 @@
                 <input type="text" name="q" placeholder="Search content..." value="{{ query|default:'' }}" class="form-control" style="width: 250px;">
                 <button type="submit" class="button primary">Search</button>
             </form>
-            <a href="{% url 'content_submit' %}" class="button secondary">Submit Content</a>
+            {% if user_profile.role == 'admin' or user_profile.role == 'school_leader' %}
+                <a href="{% url 'content_submit' %}" class="button secondary">Submit Content</a>
+            {% endif %}
         </div>
     </div>
 

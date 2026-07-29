@@ -20,6 +20,8 @@ class Vendor(models.Model):
     contact_phone = models.CharField(max_length=20, blank=True)
     website = models.URLField(blank=True)
     logo = models.ImageField(upload_to='vendor_logos/', blank=True, null=True)
+    brochure = models.FileField(upload_to='vendor_brochures/', blank=True, null=True)
+    catalog = models.FileField(upload_to='vendor_catalogs/', blank=True, null=True)
     consortium_offer = models.TextField(help_text="Special deal/discount for consortium members")
     is_vetted = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)

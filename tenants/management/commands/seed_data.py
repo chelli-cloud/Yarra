@@ -1,10 +1,13 @@
 import random
+import re
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from tenants.models import School, Profile, DiscussionThread, ThreadReply
 from competitions.models import Event, EventCategory, CompetitionResult
+
+SEED_USERNAME_PATTERN = re.compile(r'^(school_leader|admin|pl_teacher|teacher|student)_\d+$')
 
 class Command(BaseCommand):
     help = 'Seed the database with 10 schools and comprehensive sample data'
@@ -16,10 +19,14 @@ class Command(BaseCommand):
             defaults={'domain': 'yarra.pythonanywhere.com', 'name': 'Yaara Consortium'}
         )
 
-        # Clear existing data to avoid duplicates (except superusers if any)
+        # Clear existing data to avoid duplicates. Matches by username pattern rather than
+        # is_superuser=False, since the seeded 'admin_<id>' accounts are themselves superusers
+        # and would otherwise survive a rerun as orphaned, profile-less users once their old
+        # school (and thus profile) gets cascade-deleted below.
         self.stdout.write("Clearing existing sample data...")
         School.objects.all().delete()
-        User.objects.filter(is_superuser=False).delete()
+        stale_user_ids = [u.pk for u in User.objects.all() if SEED_USERNAME_PATTERN.match(u.username)]
+        User.objects.filter(pk__in=stale_user_ids).delete()
 
         schools_data = [
             ("Akshar Arbol International", "Chennai, TN", "IB & IGCSE, Arts, Sports"),

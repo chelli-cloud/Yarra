@@ -29,8 +29,14 @@
                 {% if s.state or s.country %}
                     <span class="badge secondary">{{ s.state }}{% if s.state and s.country %}, {% endif %}{{ s.country }}</span>
                 {% endif %}
+                {% if s.extended_profile.curriculum_adopted %}
+                    <span class="badge secondary">{{ s.extended_profile.curriculum_adopted }}</span>
+                {% endif %}
+                {% if s.extended_profile.total_learners %}
+                    <span class="badge secondary">{{ s.extended_profile.total_learners }} learners</span>
+                {% endif %}
             </div>
-            
+
             <div style="flex-grow: 1; margin-bottom: 24px; font-size: 0.9rem; line-height: 1.6;">
                 <p class="muted" style="margin: 0;"><strong>Specialties:</strong></p>
                 <p style="margin: 4px 0 0;">{{ s.key_offerings|truncatewords:12|default:"General Education, Holistic Development" }}</p>
@@ -39,7 +45,7 @@
             <div style="width: 100%; padding-top: 20px; border-top: 1px solid var(--border);">
                 {% if s.pk == user_school.pk %}
                     <a href="{% url 'school_profile' %}" class="button primary" style="width: 100%;">My School Profile</a>
-                {% elif s.yarra_coordinator_email %}
+                {% elif can_contact_schools and s.yarra_coordinator_email %}
                     <a href="mailto:{{ s.yarra_coordinator_email }}" class="button secondary" style="width: 100%;">Contact via Yarra Coordinator</a>
                 {% else %}
                     <span class="muted" style="font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">

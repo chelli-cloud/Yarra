@@ -51,7 +51,14 @@ def content_library(request):
 @login_required
 def content_submit(request):
     """School staff submit content for the library; it goes to Pending Yarra Verification
-    until a Super Admin approves it, per Chelli's requirement."""
+    until a Super Admin approves it, per Chelli's requirement.
+    Teachers can only view content, not submit/edit it."""
+    profile = request.user.profile
+    if profile.role not in ['admin', 'school_leader']:
+        return render(request, 'tenants/access_denied.html', {
+            'message': 'Only School Admins can submit content for verification.'
+        }, status=403)
+
     if request.method == 'POST':
         form = ContentSubmitForm(request.POST, request.FILES)
         if form.is_valid():

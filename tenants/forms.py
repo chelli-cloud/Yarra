@@ -41,6 +41,12 @@ class UserRegistrationForm(forms.ModelForm):
         model = User
         fields = ['username', 'first_name', 'last_name', 'email']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Login email must match the invited email (e.g. the Yarra Coordinator email
+        # on file for a School Admin) -- shown but not editable.
+        self.fields['email'].disabled = True
+
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")

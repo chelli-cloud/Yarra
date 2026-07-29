@@ -61,6 +61,19 @@
                 {% if form.logo.errors %}<div class="error">{{ form.logo.errors.0 }}</div>{% endif %}
             </div>
 
+            <div class="grid two">
+                <div class="form-group">
+                    <label class="label">Brochure</label>
+                    {{ form.brochure }}
+                    {% if form.brochure.errors %}<div class="error">{{ form.brochure.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="label">Catalog</label>
+                    {{ form.catalog }}
+                    {% if form.catalog.errors %}<div class="error">{{ form.catalog.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
             <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 32px; display: flex; justify-content: flex-end; gap: 16px;">
                 <a href="{% url 'vendor_list' %}" class="button secondary">Cancel</a>
                 <button type="submit" class="button primary">Submit for Approval</button>

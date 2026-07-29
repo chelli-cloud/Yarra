@@ -5,8 +5,8 @@ class VendorRegistrationForm(forms.ModelForm):
     class Meta:
         model = Vendor
         fields = [
-            'name', 'category', 'description', 'website', 
-            'contact_email', 'contact_phone', 'logo'
+            'name', 'category', 'description', 'website',
+            'contact_email', 'contact_phone', 'logo', 'brochure', 'catalog',
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
