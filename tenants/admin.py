@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    School, Profile, ReviewCycle, Notification, TeacherResource, DiscussionThread, ThreadReply,
+    School, Profile, ReviewCycle, Notification, DiscussionThread, ThreadReply,
     Invitation, SchoolProfileExtended, SchoolDocument, Payment, ActivityLog,
 )
 
@@ -8,12 +8,6 @@ from .models import (
 class SchoolAdmin(admin.ModelAdmin):
     list_display = ('name', 'location', 'contact_person', 'email', 'phone')
     search_fields = ('name', 'location', 'email')
-
-@admin.register(TeacherResource)
-class TeacherResourceAdmin(admin.ModelAdmin):
-    list_display = ('title', 'school', 'uploaded_by', 'created_at')
-    list_filter = ('school',)
-    search_fields = ('title', 'school__name')
 
 @admin.register(DiscussionThread)
 class DiscussionThreadAdmin(admin.ModelAdmin):

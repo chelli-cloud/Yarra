@@ -483,11 +483,6 @@
                 <a href="{% url 'content_library' %}" class="nav-link">
                     <span class="nav-icon">📚</span> Content Library
                 </a>
-                {% if user_profile.role != 'student' %}
-                    <a href="{% url 'teachers_hub' %}" class="nav-link">
-                        <span class="nav-icon">👨‍🏫</span> Teachers Hub
-                    </a>
-                {% endif %}
                 {% if user_profile.role == 'school_leader' or user_profile.role == 'admin' %}
                     <a href="{% url 'leadership_connect' %}" class="nav-link">
                         <span class="nav-icon">🤝</span> Leadership

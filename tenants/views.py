@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.urls import reverse
 from django.db.models import Count
 from .models import (
-    School, Profile, ReviewCycle, TeacherResource, DiscussionThread, ThreadReply,
+    School, Profile, ReviewCycle, DiscussionThread, ThreadReply,
     Notification, Invitation, SchoolProfileExtended, SchoolDocument, Payment, ActivityLog,
 )
 from .forms import (
@@ -25,7 +25,6 @@ REVIEW_STATUS_DISPLAY = {
 PROFILE_EDIT_ROLES = ['school_leader', 'admin']
 REVIEW_CYCLE_CREATE_ROLES = ['school_leader', 'admin']
 REVIEW_EDIT_ROLES = ['school_leader', 'admin', 'pl_teacher']
-RESOURCE_UPLOAD_ROLES = ['school_leader', 'admin', 'pl_teacher']
 LEADERSHIP_ROLES = ['school_leader', 'admin']
 MAX_ADMINS_PER_SCHOOL = 2
 MAX_TEACHERS_PER_SCHOOL = 5
@@ -113,51 +112,6 @@ def thread_detail(request, pk):
             return redirect('thread_detail', pk=pk)
 
     return render(request, 'tenants/thread_detail.html', {'thread': thread})
-
-@login_required
-def teachers_hub(request):
-    """Module 5: Private repository and meeting manager strictly for staff."""
-    profile = get_object_or_404(Profile, user=request.user)
-    if profile.role == 'student':
-        return render(request, 'tenants/access_denied.html', {
-            'message': 'This area is restricted to staff members only.'
-        }, status=403)
-
-    school = profile.school
-    resources_qs = TeacherResource.objects.filter(school=school).select_related('uploaded_by')
-    
-    upcoming_sessions = resources_qs.filter(resource_type='session').order_by('session_date', 'session_time')
-    past_recordings = resources_qs.filter(resource_type='recording').order_by('-session_date')
-    resource_documents = resources_qs.filter(resource_type='document').order_by('-created_at')
-    
-    can_upload = profile.role in RESOURCE_UPLOAD_ROLES
-    if request.method == 'POST' and can_upload:
-        title = request.POST.get('title')
-        if title:
-            TeacherResource.objects.create(
-                school=school,
-                title=title,
-                resource_type=request.POST.get('resource_type', 'document'),
-                presenter=request.POST.get('presenter', ''),
-                session_date=request.POST.get('session_date') or None,
-                session_time=request.POST.get('session_time') or None,
-                duration=request.POST.get('duration', ''),
-                capacity_max=request.POST.get('capacity_max') or None,
-                meeting_link=request.POST.get('meeting_link', ''),
-                registration_gform=request.POST.get('registration_gform', ''),
-                uploaded_file=request.FILES.get('uploaded_file'),
-                uploaded_by=request.user
-            )
-            return redirect('teachers_hub')
-
-    return render(request, 'tenants/teachers_hub.html', {
-        'school': school,
-        'upcoming_sessions': upcoming_sessions,
-        'past_recordings': past_recordings,
-        'resource_documents': resource_documents,
-        'can_upload': can_upload,
-        'resource_type_choices': TeacherResource.RESOURCE_TYPES,
-    })
 
 def home(request):
     if request.user.is_authenticated:

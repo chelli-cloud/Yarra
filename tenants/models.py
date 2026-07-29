@@ -230,42 +230,6 @@ class ReviewCycle(models.Model):
         return f"{self.school.name} - {self.title}"
 
 
-class TeacherResource(models.Model):
-    RESOURCE_TYPES = [
-        ('session', 'Upcoming PL Session'),
-        ('recording', 'Past Recording'),
-        ('document', 'Resource Document'),
-    ]
-
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='teacher_resources')
-    title = models.CharField(max_length=150)
-    resource_type = models.CharField(max_length=20, choices=RESOURCE_TYPES, default='document')
-    
-    # Session/Recording specific fields
-    presenter = models.CharField(max_length=100, blank=True)
-    session_date = models.DateField(null=True, blank=True)
-    session_time = models.TimeField(null=True, blank=True)
-    duration = models.CharField(max_length=50, blank=True, help_text="e.g. 1h 20m")
-    
-    # Capacity for sessions
-    capacity_max = models.PositiveIntegerField(null=True, blank=True)
-    capacity_current = models.PositiveIntegerField(default=0)
-
-    # Links and files
-    meeting_link = models.URLField(blank=True, null=True)
-    registration_gform = models.URLField(blank=True, null=True)
-    uploaded_file = models.FileField(upload_to='teacher_hub/resources/', blank=True, null=True)
-    
-    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"[{self.get_resource_type_display()}] {self.title}"
-
-
 class DiscussionThread(models.Model):
     title = models.CharField(max_length=200)
     key_takeaways = models.TextField(blank=True, null=True)
