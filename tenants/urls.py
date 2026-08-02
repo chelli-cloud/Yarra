@@ -22,6 +22,8 @@ urlpatterns = [
     path('schools/complete-profile/', views.complete_school_profile, name='complete_school_profile'),
     path('users/', views.user_management, name='user_management'),
     path('payments/record/', views.record_payment, name='record_payment'),
+    path('payments/', views.payment_history, name='payment_history'),
+    path('payments/<int:pk>/invoice/', views.download_payment_invoice, name='download_payment_invoice'),
     path('testing/switch-role/', views.switch_role, name='switch_role'),
     path('testing/return-to-admin/', views.return_to_admin, name='return_to_admin'),
 ]

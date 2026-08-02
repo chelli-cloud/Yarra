@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
-from .models import ContentItem, Category, Comment
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+from .models import ContentItem, Category, Comment, Bookmark
 from .forms import ContentSubmitForm
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -14,9 +16,10 @@ def content_library(request):
     query = request.GET.get('q')
     content_type = request.GET.get('type')
     category_slug = request.GET.get('category')
-    
-    items = ContentItem.objects.filter(status='published')
-    
+
+    # Scheduled publishing: a 'published' item isn't actually visible until its publish_at passes.
+    items = ContentItem.objects.filter(status='published', publish_at__lte=timezone.now())
+
     # Access Control: Early Years check
     profile = request.user.profile
     if not profile.school.signed_up_for_early_years:
@@ -123,21 +126,21 @@ def content_review_decide(request, slug):
 @login_required
 def content_detail(request, slug):
     """Display a single content item with comments."""
-    item = get_object_or_404(ContentItem, slug=slug, status='published')
-    
+    item = get_object_or_404(ContentItem, slug=slug, status='published', publish_at__lte=timezone.now())
+
     # Access Control check
     profile = request.user.profile
     if item.is_early_years_only and not profile.school.signed_up_for_early_years:
         messages.error(request, "This content is reserved for Early Years members.")
         return redirect('content_library')
-        
+
     if item.target_schools.exists() and profile.school not in item.target_schools.all():
         messages.error(request, "You do not have access to this content.")
         return redirect('content_library')
-        
+
     content_type = ContentType.objects.get_for_model(item)
     comments = Comment.objects.filter(content_type=content_type, object_id=item.id, parent__isnull=True)
-    
+
     if request.method == 'POST':
         body = request.POST.get('body')
         if body:
@@ -149,8 +152,55 @@ def content_detail(request, slug):
             )
             messages.success(request, "Comment added.")
             return redirect('content_detail', slug=slug)
-            
+
+    related_items = ContentItem.objects.filter(
+        status='published', publish_at__lte=timezone.now(), category=item.category
+    ).exclude(pk=item.pk)[:4] if item.category else []
+
     return render(request, 'cms/content_detail.html', {
         'item': item,
-        'comments': comments
+        'comments': comments,
+        'related_items': related_items,
+        'is_bookmarked': Bookmark.objects.filter(user=request.user, content_item=item).exists(),
     })
+
+
+@login_required
+@require_POST
+def toggle_bookmark(request, slug):
+    item = get_object_or_404(ContentItem, slug=slug, status='published')
+    bookmark, created = Bookmark.objects.get_or_create(user=request.user, content_item=item)
+    if not created:
+        bookmark.delete()
+        messages.success(request, "Removed from your bookmarks.")
+    else:
+        messages.success(request, "Saved for later.")
+    return redirect('content_detail', slug=slug)
+
+
+@login_required
+def my_bookmarks(request):
+    """M8: Bookmark / Save for later -- a user's saved content."""
+    bookmarks = Bookmark.objects.filter(user=request.user).select_related('content_item', 'content_item__category')
+    return render(request, 'cms/my_bookmarks.html', {'bookmarks': bookmarks})
+
+
+@login_required
+@require_POST
+def toggle_comment_like(request, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id)
+    if request.user in comment.likes.all():
+        comment.likes.remove(request.user)
+    else:
+        comment.likes.add(request.user)
+    return redirect(request.POST.get('next') or 'content_library')
+
+
+@login_required
+@require_POST
+def flag_comment(request, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id)
+    comment.is_flagged = True
+    comment.save(update_fields=['is_flagged'])
+    messages.success(request, "Comment reported for review.")
+    return redirect(request.POST.get('next') or 'content_library')

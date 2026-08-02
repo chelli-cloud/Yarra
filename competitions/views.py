@@ -1,3 +1,5 @@
+import csv
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -10,7 +12,7 @@ import razorpay
 
 from tenants.models import Profile, School, Notification
 from tenants.notifications import create_notification, log_activity
-from tenants.utils import generate_invoice_pdf
+from tenants.utils import generate_invoice_pdf, generate_certificate_pdf
 from .models import Event, EventCategory, StudentRegistration, PaymentStatus, CompetitionResult
 
 
@@ -139,6 +141,32 @@ def event_participants(request, pk):
         'total_participants': registrations.count(),
     }
     return render(request, 'competitions/event_participants.html', context)
+
+
+@login_required
+def export_participants_csv(request, pk):
+    """M6: CSV export of an event's attendee list."""
+    profile = _get_user_profile(request)
+    event = get_object_or_404(Event, pk=pk)
+
+    if not (request.user.is_superuser or _is_school_staff(profile)):
+        messages.error(request, "You don't have permission to export participant records for this event.")
+        return redirect('event_list')
+
+    registrations = StudentRegistration.objects.filter(event=event).select_related('student__profile__school')
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{event.title}_attendees.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Student', 'School', 'Payment Status', 'Attended', 'Registered At'])
+    for reg in registrations:
+        writer.writerow([
+            reg.student.get_full_name() or reg.student.username,
+            reg.student.profile.school.name if hasattr(reg.student, 'profile') else '',
+            reg.get_payment_status_display(), reg.attended,
+            reg.registered_at.strftime('%Y-%m-%d %H:%M'),
+        ])
+    return response
 
 
 @login_required
@@ -474,6 +502,24 @@ def download_invoice(request, pk):
     pdf_buffer = generate_invoice_pdf(registration)
     response = HttpResponse(pdf_buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="Invoice_{registration.id}.pdf"'
+    return response
+
+
+@login_required
+def download_certificate(request, pk):
+    """M6: Download a PDF attendance certificate, once the student has attended the event."""
+    registration = get_object_or_404(StudentRegistration, pk=pk, student=request.user)
+    if not registration.attended:
+        messages.error(request, "A certificate is only available after you've attended the event.")
+        return redirect('event_detail', pk=registration.event.pk)
+
+    if not registration.certificate_issued:
+        registration.certificate_issued = True
+        registration.save(update_fields=['certificate_issued'])
+
+    pdf_buffer = generate_certificate_pdf(registration)
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Certificate_{registration.id}.pdf"'
     return response
 
 

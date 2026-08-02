@@ -224,6 +224,10 @@
             <!-- Feedback Section -->
             {% if registration and registration.attended %}
             <div class="card">
+                <h2>Certificate</h2>
+                <a href="{% url 'download_certificate' registration.pk %}" class="button secondary" style="width: 100%;">Download Certificate</a>
+            </div>
+            <div class="card">
                 <h2>Submit Feedback</h2>
                 <form action="{% url 'submit_feedback' registration.pk %}" method="post">
                     {% csrf_token %}

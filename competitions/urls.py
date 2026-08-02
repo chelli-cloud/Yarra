@@ -14,10 +14,12 @@ urlpatterns = [
     path('<int:pk>/edit/', views.event_edit, name='event_edit'),
     path('<int:pk>/delete/', views.event_delete, name='event_delete'),
     path('<int:pk>/participants/', views.event_participants, name='event_participants'),
+    path('<int:pk>/participants/export/', views.export_participants_csv, name='export_participants_csv'),
     path('<int:pk>/register/', views.register_for_event, name='register_for_event'),
     path('registration/<int:pk>/confirm/', views.registration_confirm, name='registration_confirm'),
     path('registration/<int:pk>/attendance/', views.mark_attendance, name='mark_attendance'),
     path('registration/<int:pk>/feedback/', views.submit_feedback, name='submit_feedback'),
     path('registration/<int:pk>/invoice/', views.download_invoice, name='download_invoice'),
+    path('registration/<int:pk>/certificate/', views.download_certificate, name='download_certificate'),
     path('<int:event_pk>/result/', views.create_competition_result, name='create_competition_result'),
 ]

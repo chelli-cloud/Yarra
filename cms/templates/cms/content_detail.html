@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ item.title }} | Yarra{% endblock %}
+{% block title %}{{ item.seo_title|default:item.title }} | Yarra{% endblock %}
+
+{% block extra_head %}
+    {% if item.seo_description %}<meta name="description" content="{{ item.seo_description }}">{% endif %}
+    <meta property="og:title" content="{{ item.seo_title|default:item.title }}">
+    {% if item.seo_description %}<meta property="og:description" content="{{ item.seo_description }}">{% endif %}
+    {% if item.featured_image %}<meta property="og:image" content="{{ item.featured_image.url }}">{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="page" style="max-width: 900px; margin: 0 auto;">
@@ -21,6 +28,12 @@
                 {% endif %}
             </div>
         </div>
+        <form method="post" action="{% url 'toggle_bookmark' item.slug %}">
+            {% csrf_token %}
+            <button type="submit" class="button {% if is_bookmarked %}primary{% else %}secondary{% endif %}">
+                {% if is_bookmarked %}★ Saved{% else %}☆ Save for later{% endif %}
+            </button>
+        </form>
     </div>
 
     <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 32px;">
@@ -108,6 +121,25 @@
                     <div style="font-size: 1rem; line-height: 1.6; color: #475569;">
                         {{ comment.body|linebreaks }}
                     </div>
+
+                    <div style="display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                        <form method="post" action="{% url 'toggle_comment_like' comment.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="button ghost" style="padding: 6px 12px; font-size: 0.8rem;">
+                                {% if request.user in comment.likes.all %}❤️{% else %}🤍{% endif %} {{ comment.likes.count }}
+                            </button>
+                        </form>
+                        {% if not comment.is_flagged %}
+                        <form method="post" action="{% url 'flag_comment' comment.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="button ghost" style="padding: 6px 12px; font-size: 0.8rem;">🚩 Report</button>
+                        </form>
+                        {% else %}
+                        <span class="badge warning" style="align-self: center;">Reported</span>
+                        {% endif %}
+                    </div>
                 </div>
             {% empty %}
                 <div style="text-align: center; padding: 40px; background: #f8fafc; border-radius: var(--radius-md); border: 2px dashed #e2e8f0;">
@@ -116,5 +148,20 @@
             {% endfor %}
         </div>
     </div>
+
+    {% if related_items %}
+    <div style="margin-top: 60px;">
+        <h2 style="margin-bottom: 24px;">Related Content</h2>
+        <div class="grid two">
+            {% for related in related_items %}
+                <a href="{% url 'content_detail' related.slug %}" class="card" style="text-decoration: none; color: inherit; margin-bottom: 0;">
+                    <span class="badge info" style="font-size: 0.7rem;">{{ related.get_content_type_display }}</span>
+                    <h3 style="margin: 12px 0 4px; font-size: 1.05rem;">{{ related.title }}</h3>
+                    <p class="muted" style="font-size: 0.85rem; margin: 0;">{{ related.body|truncatewords:15 }}</p>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

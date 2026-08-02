@@ -18,10 +18,17 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
-from tenants.admin_views import admin_dashboard
+from tenants.admin_views import (
+    admin_dashboard, export_schools_csv, export_payments_csv, export_vendors_csv,
+    broadcast_announcement,
+)
 
 urlpatterns = [
     path('admin/dashboard/', admin_dashboard, name='admin_dashboard'),
+    path('admin/dashboard/export/schools/', export_schools_csv, name='export_schools_csv'),
+    path('admin/dashboard/export/payments/', export_payments_csv, name='export_payments_csv'),
+    path('admin/dashboard/export/vendors/', export_vendors_csv, name='export_vendors_csv'),
+    path('admin/dashboard/broadcast/', broadcast_announcement, name='broadcast_announcement'),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('vendors/', include('vendors.urls')),

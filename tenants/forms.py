@@ -12,11 +12,14 @@ class SchoolRegistrationForm(forms.ModelForm):
         fields = ['name', 'address', 'phone', 'email', 'location', 'contact_person', 'logo']
 
 class SchoolCreateForm(forms.ModelForm):
-    """Super Admin's minimal school creation form (name, state/country, Yarra Coordinator)."""
+    """Super Admin's minimal school creation form (name, state/country, Yarra Coordinator, membership tier)."""
 
     class Meta:
         model = School
-        fields = ['name', 'state', 'country', 'yarra_coordinator_name', 'yarra_coordinator_email', 'yarra_coordinator_phone']
+        fields = [
+            'name', 'state', 'country', 'yarra_coordinator_name', 'yarra_coordinator_email',
+            'yarra_coordinator_phone', 'membership_tier',
+        ]
 
 class SchoolProfileExtendedForm(forms.ModelForm):
     class Meta:

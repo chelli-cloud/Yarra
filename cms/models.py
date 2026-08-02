@@ -108,3 +108,17 @@ class Comment(models.Model):
             return self.user.profile.school.name
         except:
             return "Unknown School"
+
+
+class Bookmark(models.Model):
+    """M8: Bookmark / Save for later, per user."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cms_bookmarks')
+    content_item = models.ForeignKey(ContentItem, on_delete=models.CASCADE, related_name='bookmarked_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'content_item')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} bookmarked {self.content_item.title}"

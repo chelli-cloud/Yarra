@@ -86,6 +86,10 @@ class SchoolProfileExtended(models.Model):
 
     curriculum_planning_description = models.TextField(blank=True)
 
+    # M13: School Profile Pages
+    achievements = models.TextField(blank=True, help_text="Achievements and highlights, one per line")
+    leadership_team = models.TextField(blank=True, help_text="Leadership team, one 'Name — Title' per line")
+
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

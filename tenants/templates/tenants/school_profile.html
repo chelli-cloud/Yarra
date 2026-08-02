@@ -73,6 +73,30 @@
             </div>
         </div>
 
+        {% if school.extended_profile.achievements or school.extended_profile.leadership_team %}
+        <div class="card">
+            <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">🏆</span> Achievements & Leadership
+            </h2>
+            {% if school.extended_profile.achievements %}
+                <h3 style="font-size: 1rem; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Achievements & Highlights</h3>
+                <ul style="margin: 0 0 24px; padding-left: 20px; line-height: 1.8;">
+                    {% for line in school.extended_profile.achievements.splitlines %}
+                        {% if line %}<li>{{ line }}</li>{% endif %}
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% if school.extended_profile.leadership_team %}
+                <h3 style="font-size: 1rem; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Leadership Team</h3>
+                <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                    {% for line in school.extended_profile.leadership_team.splitlines %}
+                        {% if line %}<li>{{ line }}</li>{% endif %}
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <div class="card">
             <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 1.5rem;">📍</span> Location & Address

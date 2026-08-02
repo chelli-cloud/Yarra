@@ -8,7 +8,10 @@
         <h1>Participant Records</h1>
         <p class="muted">{{ event.title }} · {{ total_participants }} total participant{{ total_participants|pluralize }}</p>
     </div>
-    <a href="{% url 'event_detail' event.pk %}" class="button secondary">Back to Event</a>
+    <div class="button-group">
+        <a href="{% url 'export_participants_csv' event.pk %}" class="button secondary">Export CSV</a>
+        <a href="{% url 'event_detail' event.pk %}" class="button secondary">Back to Event</a>
+    </div>
 </div>
 
 <div class="card" style="margin-bottom: 32px;">

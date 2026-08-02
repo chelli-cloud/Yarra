@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse
 from django.db.models import Count
+from django.http import HttpResponse
 from .models import (
     School, Profile, ReviewCycle, DiscussionThread, ThreadReply,
     Notification, Invitation, SchoolProfileExtended, SchoolDocument, Payment, ActivityLog,
@@ -476,6 +477,37 @@ def record_payment(request):
             del form.fields['school']
 
     return render(request, 'tenants/record_payment.html', {'form': form})
+
+
+@login_required
+def payment_history(request):
+    """M3: Full payment history -- Super Admin sees every school, School Admin their own."""
+    if request.user.is_superuser:
+        payments = Payment.objects.select_related('school', 'recorded_by').order_by('-created_at')
+    else:
+        profile = get_object_or_404(Profile, user=request.user)
+        if profile.role not in PROFILE_EDIT_ROLES:
+            return render(request, 'tenants/access_denied.html', status=403)
+        payments = Payment.objects.filter(school=profile.school).select_related('school', 'recorded_by').order_by('-created_at')
+
+    return render(request, 'tenants/payment_history.html', {'payments': payments})
+
+
+@login_required
+def download_payment_invoice(request, pk):
+    """M3: Download the PDF invoice for a manually recorded payment."""
+    payment = get_object_or_404(Payment, pk=pk)
+    if not request.user.is_superuser:
+        profile = get_object_or_404(Profile, user=request.user)
+        if profile.role not in PROFILE_EDIT_ROLES or profile.school_id != payment.school_id:
+            return render(request, 'tenants/access_denied.html', status=403)
+
+    from .utils import generate_payment_invoice_pdf
+    pdf_buffer = generate_payment_invoice_pdf(payment)
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Invoice_Payment_{payment.id}.pdf"'
+    return response
+
 
 @login_required
 def create_review_cycle(request):

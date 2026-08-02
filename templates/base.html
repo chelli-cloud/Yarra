@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Yarra{% endblock %}</title>
+    {% block extra_head %}{% endblock %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -484,6 +485,9 @@
                 <a href="{% url 'content_library' %}" class="nav-link">
                     <span class="nav-icon">📚</span> Content Library
                 </a>
+                <a href="{% url 'my_bookmarks' %}" class="nav-link">
+                    <span class="nav-icon">🔖</span> My Bookmarks
+                </a>
                 {% if user_profile.role == 'school_leader' or user_profile.role == 'admin' %}
                     <a href="{% url 'leadership_connect' %}" class="nav-link">
                         <span class="nav-icon">🤝</span> Leadership
@@ -492,8 +496,8 @@
                         <a href="{% url 'user_management' %}" class="nav-link">
                             <span class="nav-icon">👥</span> User Management
                         </a>
-                        <a href="{% url 'record_payment' %}" class="nav-link">
-                            <span class="nav-icon">💳</span> Record Payment
+                        <a href="{% url 'payment_history' %}" class="nav-link">
+                            <span class="nav-icon">💳</span> Payments
                         </a>
                     {% endif %}
                 {% endif %}
@@ -504,8 +508,8 @@
                     <a href="{% url 'user_management' %}" class="nav-link">
                         <span class="nav-icon">👥</span> User Management
                     </a>
-                    <a href="{% url 'record_payment' %}" class="nav-link">
-                        <span class="nav-icon">💳</span> Record Payment
+                    <a href="{% url 'payment_history' %}" class="nav-link">
+                        <span class="nav-icon">💳</span> Payments
                     </a>
                     <a href="{% url 'content_review_queue' %}" class="nav-link">
                         <span class="nav-icon">✅</span> Content Review
