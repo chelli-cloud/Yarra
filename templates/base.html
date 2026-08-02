@@ -459,9 +459,11 @@
                 <a href="{% url 'school_profile' %}" class="nav-link">
                     <span class="nav-icon">🏫</span> School Profile
                 </a>
-                <a href="{% url 'review_dashboard' %}" class="nav-link">
-                    <span class="nav-icon">📊</span> Reviews
-                </a>
+                {% if user_profile.role != 'student' %}
+                    <a href="{% url 'review_dashboard' %}" class="nav-link">
+                        <span class="nav-icon">📊</span> Reviews
+                    </a>
+                {% endif %}
                 <a href="{% url 'event_list' %}" class="nav-link">
                     <span class="nav-icon">🏆</span> Competitions
                 </a>
@@ -471,9 +473,11 @@
                 <a href="{% url 'school_network' %}" class="nav-link">
                     <span class="nav-icon">🌐</span> School Network
                 </a>
-                <a href="{% url 'vendor_list' %}" class="nav-link">
-                    <span class="nav-icon">🛒</span> Vendors
-                </a>
+                {% if user_profile.role != 'student' %}
+                    <a href="{% url 'vendor_list' %}" class="nav-link">
+                        <span class="nav-icon">🛒</span> Vendors
+                    </a>
+                {% endif %}
                 <a href="{% url 'exchange_list' %}" class="nav-link">
                     <span class="nav-icon">🔄</span> Student Exchange
                 </a>

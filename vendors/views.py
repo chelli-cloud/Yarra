@@ -9,7 +9,13 @@ from competitions.models import Event
 
 @login_required
 def vendor_list(request):
-    """M10: Directory listing with search and filtering."""
+    """M10: Directory listing with search and filtering. Students don't have marketplace access."""
+    profile = Profile.objects.filter(user=request.user).first()
+    if profile and profile.role == 'student':
+        return render(request, 'tenants/access_denied.html', {
+            'message': 'The Vendor Marketplace is not available to students.'
+        }, status=403)
+
     category = request.GET.get('category')
     query = request.GET.get('q')
     
@@ -33,7 +39,13 @@ def vendor_list(request):
 
 @login_required
 def vendor_detail(request, pk):
-    """M10: Vendor profile with enquiry form."""
+    """M10: Vendor profile with enquiry form. Students don't have marketplace access."""
+    profile = Profile.objects.filter(user=request.user).first()
+    if profile and profile.role == 'student':
+        return render(request, 'tenants/access_denied.html', {
+            'message': 'The Vendor Marketplace is not available to students.'
+        }, status=403)
+
     vendor = get_object_or_404(Vendor, pk=pk, is_approved=True)
     form = VendorEnquiryForm()
     
@@ -56,7 +68,13 @@ def vendor_detail(request, pk):
 
 @login_required
 def vendor_signup(request):
-    """M10: Self-registration for vendors."""
+    """M10: Self-registration for vendors. Students don't have marketplace access."""
+    profile = Profile.objects.filter(user=request.user).first()
+    if profile and profile.role == 'student':
+        return render(request, 'tenants/access_denied.html', {
+            'message': 'The Vendor Marketplace is not available to students.'
+        }, status=403)
+
     if request.method == 'POST':
         form = VendorRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
@@ -73,7 +91,14 @@ def vendor_signup(request):
 
 @login_required
 def my_requests(request):
-    """M10: 'Requests' tab — the school's own enquiries sent to vendors, with status."""
+    """M10: 'Requests' tab — the school's own enquiries sent to vendors, with status.
+    Students don't have marketplace access."""
+    profile = Profile.objects.filter(user=request.user).first()
+    if profile and profile.role == 'student':
+        return render(request, 'tenants/access_denied.html', {
+            'message': 'The Vendor Marketplace is not available to students.'
+        }, status=403)
+
     school = request.user.profile.school
     enquiries = VendorEnquiry.objects.filter(school=school).select_related('vendor').order_by('-created_at')
     return render(request, 'vendors/my_requests.html', {'enquiries': enquiries})
@@ -81,7 +106,14 @@ def my_requests(request):
 
 @login_required
 def event_interest_submit(request, event_pk):
-    """Vendor applies to be part of an upcoming Yarra event; Super Admin is notified."""
+    """Vendor applies to be part of an upcoming Yarra event; Super Admin is notified.
+    Students don't have marketplace access."""
+    profile = Profile.objects.filter(user=request.user).first()
+    if profile and profile.role == 'student':
+        return render(request, 'tenants/access_denied.html', {
+            'message': 'The Vendor Marketplace is not available to students.'
+        }, status=403)
+
     event = get_object_or_404(Event, pk=event_pk)
     approved_vendors = Vendor.objects.filter(is_approved=True).order_by('name')
 

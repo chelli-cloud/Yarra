@@ -200,7 +200,7 @@ def school_network(request):
 def review_dashboard(request):
     profile = get_object_or_404(Profile, user=request.user)
     if profile.role == 'student':
-        return render(request, 'tenants/access_denied.html', {'message': 'Students do not have access to school review information.'})
+        return render(request, 'tenants/access_denied.html', {'message': 'Students do not have access to school review information.'}, status=403)
 
     school = profile.school
     cycle_id = request.GET.get('cycle_id')

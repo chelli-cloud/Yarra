@@ -171,11 +171,13 @@
                     {% endif %}
             </div>
 
+            {% if profile.role != 'student' %}
             <div class="card">
                     <h2>Vendors</h2>
                     <p class="muted">Vendors can apply to be part of this event.</p>
                     <a href="{% url 'event_interest_submit' event.pk %}" class="button secondary" style="width: 100%;">Apply as a Vendor</a>
             </div>
+            {% endif %}
 
             <!-- Registered Students and Attendance -->
             {% if can_manage_participants %}
