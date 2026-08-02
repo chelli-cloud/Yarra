@@ -76,36 +76,42 @@ ROLE_MATRIX = [
     ['Leadership Connect', 'No', 'Yes (Leader/Admin only)', 'No', 'No', 'No'],
     ['Notifications & Activity', 'Sees all activity', 'Own', 'Own', 'Own', 'No'],
     ['Consortium Analytics', 'Yes (direct URL)', 'No', 'No', 'No', 'No'],
+    ['Role Preview (testing)', 'Yes', 'No', 'No', 'No', 'No'],
 ]
 
 ROLE_STORIES = {
     'Super Admin': [
-        'Create a school with just its name, state/country, and Yarra Coordinator contact, and let the invite handle the rest.',
+        'Create a school with just its name, state/country, Yarra Coordinator contact, and membership tier, and let the invite handle the rest.',
         'See total schools, revenue (manual payments + verified event fees), and pending approvals in one dashboard.',
+        'Export schools, payments, or vendors as CSV for offline reporting.',
+        'Broadcast an announcement to every school, or just one membership tier.',
         'Cap every school at 2 admins and 5 teachers so accounts stay under control.',
         'Create, edit, and delete Yarra-wide events, with registrations and results cleaned up automatically on delete.',
         'Review and approve school-submitted content before it reaches other schools.',
         'Approve vendors and their promotions before they appear in the marketplace.',
         'Get notified the moment any meaningful activity happens anywhere on the platform.',
+        'Preview the platform as any other role, to test modules or help a school troubleshoot.',
     ],
     'School Admin': [
         'Invite teachers and a second admin by email, without needing an upload template.',
         'See our own school\'s membership, payments, and dashboard data -- never another school\'s.',
-        'Record a payment (including cheque) if the bank transfer confirmation is still pending.',
+        'Record a payment (including cheque) if the bank transfer confirmation is still pending, and download its invoice.',
+        'Review our full payment history in one place.',
         'Post a teacher/student exchange listing with an exact start and end date.',
         'Submit content for the library and know it stays private until Yarra approves it.',
         'Contact another school\'s Yarra Coordinator directly from the School Network.',
+        'Showcase our achievements and leadership team on our school profile.',
     ],
     'Teacher': [
         'View events, exchanges, content, vendors, and the school network without needing edit access.',
         'View Open, Applied, Under Review, and Matched exchanges, and apply to open ones.',
-        'Browse the content library and filter by type, but not create or edit posts.',
+        'Browse the content library, filter by type, save items for later, and like or report a comment.',
         'Browse the school network for collaboration ideas, without being able to contact other schools directly.',
     ],
     'Student': [
         'Register for an active event and pay online via Razorpay, or upload proof if online payment isn\'t configured.',
         'Download a PDF invoice once my payment is verified.',
-        'Submit feedback for an event once I\'ve attended it.',
+        'Submit feedback for an event once I\'ve attended it, and download a certificate of participation.',
     ],
     'Vendor': [
         'Apply through Vendor Sign-up with our brochure and catalog, and wait for Super Admin approval.',
@@ -143,13 +149,18 @@ MODULES = [
             'Log in as a superuser; the Command Centre dashboard loads automatically.',
             'Metrics (total/active schools, expiring memberships, revenue, pending vendors, flagged comments) are computed live from current data -- nothing is hand-entered.',
             'Drill into pending vendor approvals or flagged content directly from the same screen.',
+            'Export schools, payments, or vendors as a CSV file for offline reporting.',
+            'Send a broadcast announcement to every school, or filter to a single membership tier.',
         ],
         'stories': [
             'As a Super Admin, I want schools, revenue, and pending approvals visible in one place so I don\'t have to check every module separately.',
+            'As a Super Admin, I want to export platform data as CSV so I can analyze it outside the app.',
+            'As a Super Admin, I want to broadcast an announcement so every school (or a specific tier) hears about it at once.',
         ],
         'acceptance': [
             'Revenue = sum of verified event registration fees + every manually recorded Payment, not a flat estimate.',
             'Metrics recalculate automatically as schools/events/payments are added -- no manual refresh step.',
+            'CSV exports and the broadcast tool are Super-Admin-only.',
         ],
     },
     {
@@ -195,7 +206,7 @@ MODULES = [
         'purpose': 'Create a new member school in two stages -- Super Admin fills the minimum, the school fills the rest.',
         'roles': 'Super Admin (creates). School Admin (completes).',
         'workflow': [
-            'Super Admin enters school name, state, country, and the Yarra Coordinator\'s name/email/phone.',
+            'Super Admin enters school name, state, country, membership tier, and the Yarra Coordinator\'s name/email/phone.',
             'An invitation (role = Admin) is sent to the coordinator\'s email.',
             'The coordinator accepts and sets a password; their login email is locked to the invited address.',
             'The school profile shows a "Complete Your Profile" banner until the extended profile -- curriculum/board, learner count, principal contact, vision, infrastructure, and up to 10 supporting documents -- is submitted.',
@@ -214,12 +225,14 @@ MODULES = [
         'purpose': 'The school\'s home base -- branding, membership status, and admin actions.',
         'roles': 'Super Admin (any school). School Admin / School Leader (own school, editable). Others (view own school).',
         'workflow': [
-            'View logo, location, contact person, membership tier, and social links.',
+            'View logo, location, contact person, membership tier, social links, achievements/highlights, and leadership team.',
             'School Admin edits branding, contact details, and social links; uploads a logo.',
-            'Admin panel links out to Complete Extended Profile, Invite Staff, User Management, and Record Payment.',
+            'Achievements and leadership team are entered as part of the extended profile and displayed on the school\'s page.',
+            'Admin panel links out to Complete Extended Profile, Invite Staff, User Management, and Payment History.',
         ],
         'stories': [
             'As a School Admin, I want to update our logo and social links myself.',
+            'As a School Admin, I want to showcase our achievements and leadership team on our profile.',
             'As a Super Admin, I want to open and, if needed, edit any school\'s profile from the Master Dashboard.',
         ],
         'acceptance': [
@@ -233,15 +246,18 @@ MODULES = [
         'workflow': [
             'Open Record Payment; Super Admin chooses which school, School Admin is auto-scoped to their own.',
             'Enter amount, method (online / cheque / bank transfer / cash / other), notes, and an optional receipt file.',
+            'Payment History lists every payment (Super Admin sees all schools, School Admin their own), each with a downloadable PDF invoice.',
             'Students separately download a PDF invoice once their event registration payment is verified.',
         ],
         'stories': [
             'As a Super Admin, I want to record a cheque payment on a school\'s behalf if their admin can\'t.',
+            'As a School Admin, I want to see our full payment history and download an invoice for any past payment.',
             'As a Student, I want a proper invoice once my payment clears.',
         ],
         'acceptance': [
             'Cheque is a supported payment method, per the explicit requirement.',
             'Dashboard revenue includes every manually recorded payment, not just online ones.',
+            'Payment History is scoped the same way Record Payment already is -- no new access rule introduced.',
         ],
     },
     {
@@ -254,16 +270,19 @@ MODULES = [
             'Students register; Razorpay checkout runs if configured, otherwise a manual payment-proof upload is accepted.',
             'School staff mark attendance and log competition results for their own school\'s students.',
             'After the event, a recording link and presentation file can be attached.',
+            'Once a student is marked attended, they can download a PDF certificate of participation.',
+            'Staff can export an event\'s attendee list as CSV from the Participant Records page.',
             'Deleting an event cascades its registrations and results -- no orphan records are left behind.',
         ],
         'stories': [
             'As a Super Admin, I want to create Yarra events so every member school can take part.',
-            'As a School Admin, I want to track which of our students registered and attended.',
-            'As a Student, I want to register and pay, and get a certificate-ready attendance record.',
+            'As a School Admin, I want to track which of our students registered and attended, and export that list.',
+            'As a Student, I want to register and pay, and download a certificate once I\'ve attended.',
         ],
         'acceptance': [
             'Create, edit, and delete permissions exist only for Super Admin.',
             'Participant Records (grouped by school) are reached from the event page, not the main dashboard.',
+            'A certificate is only downloadable once attendance is actually marked.',
         ],
     },
     {
@@ -291,19 +310,22 @@ MODULES = [
         'purpose': 'Share Yarra-curated learning resources, gated by Super Admin approval.',
         'roles': 'Super Admin (approve/reject). School Admin (submit). Teacher & all staff (view/search/filter/comment).',
         'workflow': [
-            'School Admin submits an article, podcast, video, or announcement.',
+            'School Admin submits an article, podcast, video, or announcement, optionally scheduled for a future publish date.',
             'It saves as Pending Yarra Verification -- invisible to every other school until approved.',
             'Super Admin reviews the queue and approves (publishes) or rejects (returns to draft, submitter notified).',
-            'Approved content is searchable/filterable by type and category, and gated by Early-Years membership and any target-school list.',
+            'Approved content is searchable/filterable by type and category, gated by Early-Years membership and any target-school list, and only actually visible once its scheduled publish date has passed.',
+            'Any viewer can save an item to My Bookmarks, see related content in the same category, and like or report a comment.',
         ],
         'stories': [
             'As a School Admin, I want to submit a workshop recording and know it stays private until Yarra approves it.',
             'As a Super Admin, I want to curate the library before anything goes live.',
-            'As a Teacher, I want to browse and filter content, without being able to create or edit posts.',
+            'As a Teacher, I want to browse and filter content, save items for later, and like or report a comment, without being able to create or edit posts.',
         ],
         'acceptance': [
             'Pending content never appears to other schools.',
-            'Only School Admin roles can submit; comments are open to any authenticated viewer.',
+            'A future-scheduled post never appears before its publish date, even once approved.',
+            'Only School Admin roles can submit; comments, likes, bookmarks, and the report action are open to any authenticated viewer.',
+            'A reported comment appears in the Super Admin moderation queue.',
         ],
     },
     {
@@ -433,6 +455,23 @@ MODULES = [
             'Note: this module is currently reachable only by direct URL -- it is not yet linked from the sidebar navigation.',
         ],
     },
+    {
+        'name': '19. Role Preview (Super Admin Testing Tool)',
+        'purpose': 'Let the Super Admin click through the app exactly as another role sees it, for testing and support -- without a second login.',
+        'roles': 'Super Admin only.',
+        'workflow': [
+            'A "Preview as role" dropdown in the top bar (visible only to a real Super Admin, or someone already mid-preview) lists School Leader, Admin, PL Teacher, Teacher, and Student.',
+            'Selecting a role logs the Super Admin in as a representative account of that role.',
+            'A persistent banner shows who is being previewed, with a one-click "Return to Super Admin".',
+        ],
+        'stories': [
+            'As a Super Admin, I want to preview the app as a Teacher or Student so I can verify a module works correctly for that role, or help a school troubleshoot.',
+        ],
+        'acceptance': [
+            'Only a real Super Admin can start a preview; an ordinary user has no way to trigger it, even by guessing the URL.',
+            'Vendor isn\'t in the list -- vendors aren\'t a platform login role, so there\'s no account to preview as.',
+        ],
+    },
 ]
 
 LIFECYCLES = [
@@ -453,6 +492,7 @@ LIFECYCLES = [
             'Super Admin creates the event',
             'Every school views and students register (+ pay)',
             'Staff mark attendance and log results for their own school',
+            'Attended students can download a certificate; staff can export the attendee list as CSV',
             'Recording link / presentation attached post-event',
             '(Optional) Super Admin deletes -- registrations and results cascade-delete',
         ],
@@ -471,10 +511,11 @@ LIFECYCLES = [
     {
         'name': 'Content Publishing',
         'steps': [
-            'School Admin submits post',
+            'School Admin submits post (optionally with a future publish date)',
             'Saved as Pending Yarra Verification',
             'Super Admin reviews',
-            'Approved -> Published (visible to all permitted schools) OR Rejected -> back to Draft, submitter notified',
+            'Approved -> Published, but stays hidden until its publish date OR Rejected -> back to Draft, submitter notified',
+            'Once visible: viewers can bookmark it, see related items, and like/report comments',
         ],
     },
     {
@@ -500,9 +541,11 @@ LIFECYCLES = [
 CHECKLIST = [
     'Confirm each new school\'s Yarra Coordinator email is correct before sending the invite -- their login is permanently locked to it.',
     'Enforce the 2-admin / 5-teacher caps by removing an inactive user before approving a new invite past the limit.',
-    'Review the Content Review queue regularly so submissions don\'t sit pending indefinitely.',
+    'Review the Content Review queue regularly so submissions don\'t sit pending indefinitely; check for reported comments there too.',
     'Approve vendors via Django Admin before they can appear in the marketplace or receive event-interest applications.',
     'Delete an event only when certain -- it permanently removes every registration and result tied to it.',
+    'Schedule check_membership_expiry to run daily (e.g. PythonAnywhere Tasks tab) so renewal reminders and auto-suspension actually fire.',
+    'Use Broadcast Announcement sparingly -- it notifies every matching user immediately, with no undo.',
     'Regenerate this PDF after major module changes by running python scripts/generate_user_manual.py.',
 ]
 
