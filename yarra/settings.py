@@ -113,6 +113,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'tenants.context_processors.notification_context',
                 'tenants.context_processors.school_context',
+                'tenants.context_processors.role_preview_context',
             ],
         },
     },

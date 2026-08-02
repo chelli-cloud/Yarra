@@ -8,7 +8,6 @@ urlpatterns = [
     path('school-profile/', views.school_profile, name='school_profile'),
     path('school-profile/<int:pk>/', views.school_profile, name='school_profile_detail'),
     path('master/', views.master_dashboard, name='master_dashboard'),
-    path('my-profile/', views.my_profile, name='my_profile'),
     path('school-review/', views.review_dashboard, name='review_dashboard'),
     path('school-review/create/', views.create_review_cycle, name='create_review_cycle'),
     path('network/', views.school_network, name='school_network'),
@@ -23,4 +22,6 @@ urlpatterns = [
     path('schools/complete-profile/', views.complete_school_profile, name='complete_school_profile'),
     path('users/', views.user_management, name='user_management'),
     path('payments/record/', views.record_payment, name='record_payment'),
+    path('testing/switch-role/', views.switch_role, name='switch_role'),
+    path('testing/return-to-admin/', views.return_to_admin, name='return_to_admin'),
 ]

@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from .models import Notification, Profile
 
 
@@ -27,4 +28,23 @@ def school_context(request):
     return {
         'user_profile': profile,
         'user_school': profile.school,
+    }
+
+
+def role_preview_context(request):
+    """Drives the Super Admin 'preview as role' testing tool: whether the
+    switcher should render, and -- if currently previewing -- who to show
+    the 'Return to Super Admin' banner for."""
+    if not request.user.is_authenticated:
+        return {}
+
+    impersonator_id = request.session.get('impersonator_id')
+    if not impersonator_id:
+        return {'can_switch_role': request.user.is_superuser}
+
+    impersonator = User.objects.filter(pk=impersonator_id, is_superuser=True).first()
+    return {
+        'can_switch_role': True,
+        'is_role_preview': True,
+        'role_preview_admin': impersonator,
     }

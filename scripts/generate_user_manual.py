@@ -64,7 +64,6 @@ ROLE_MATRIX = [
     ['User Management', 'Full (all schools)', 'Own school (max 2 admins, 5 teachers)', 'No', 'No', 'No'],
     ['School Onboarding', 'Creates (basic data)', 'Completes extended profile', 'No', 'No', 'No'],
     ['School Profile / Dashboard', 'Full', 'Own school (edit)', 'View', 'No', 'No'],
-    ['My Profile', 'Own', 'Own', 'Own', 'Own', 'No'],
     ['Payments & Invoices', 'Full (any school)', 'Own school', 'No', 'Own invoice', 'No'],
     ['Events', 'Create / edit / delete', 'View, manage school participation', 'View', 'Register & pay', 'No'],
     ['Student Exchange', 'Oversight', 'Create / manage', 'View & apply', 'No', 'No'],
@@ -228,22 +227,7 @@ MODULES = [
         ],
     },
     {
-        'name': '7. My Profile',
-        'purpose': 'Personal detail management for the logged-in user.',
-        'roles': 'All roles (own profile only).',
-        'workflow': [
-            'View/edit date of birth, contact numbers, blood group, ID numbers, languages, addresses, and profile picture.',
-            'Students additionally edit grade, section, and campus.',
-        ],
-        'stories': [
-            'As a user, I want to keep my emergency contact and personal details current.',
-        ],
-        'acceptance': [
-            'A user can only ever edit their own profile record.',
-        ],
-    },
-    {
-        'name': '8. Payments & Invoices',
+        'name': '7. Payments & Invoices',
         'purpose': 'Record and track membership and event payments.',
         'roles': 'Super Admin (any school). School Admin (own school). Student (own invoice).',
         'workflow': [
@@ -261,7 +245,7 @@ MODULES = [
         ],
     },
     {
-        'name': '9. Events',
+        'name': '8. Events',
         'purpose': 'Run Yarra-wide competitions, workshops, and opportunities.',
         'roles': 'Super Admin (create/edit/delete). School Admin & Teacher (view, manage own school\'s participation). Student (register).',
         'workflow': [
@@ -283,7 +267,7 @@ MODULES = [
         ],
     },
     {
-        'name': '10. Student Exchange Programs',
+        'name': '9. Student Exchange Programs',
         'purpose': 'Match one school\'s teacher/student exchange offer with another school.',
         'roles': 'School Admin (create/manage). Teacher (view/apply, message).',
         'workflow': [
@@ -303,7 +287,7 @@ MODULES = [
         ],
     },
     {
-        'name': '11. Content Library',
+        'name': '10. Content Library',
         'purpose': 'Share Yarra-curated learning resources, gated by Super Admin approval.',
         'roles': 'Super Admin (approve/reject). School Admin (submit). Teacher & all staff (view/search/filter/comment).',
         'workflow': [
@@ -323,7 +307,7 @@ MODULES = [
         ],
     },
     {
-        'name': '12. School Network',
+        'name': '11. School Network',
         'purpose': 'A directory of every member school, for collaboration discovery.',
         'roles': 'Super Admin, School Admin, Teacher (all view-only except own school).',
         'workflow': [
@@ -340,7 +324,7 @@ MODULES = [
         ],
     },
     {
-        'name': '13. Vendor Sign-up',
+        'name': '12. Vendor Sign-up',
         'purpose': 'Let prospective vendors apply to join the marketplace.',
         'roles': 'Vendor applicant (any logged-in user, acting on the vendor\'s behalf). Super Admin (approves).',
         'workflow': [
@@ -356,7 +340,7 @@ MODULES = [
         ],
     },
     {
-        'name': '14. Vendor Marketplace',
+        'name': '13. Vendor Marketplace',
         'purpose': 'Let schools discover approved vendors and send enquiries; let vendors run promotional campaigns.',
         'roles': 'Super Admin (approve vendors/promotions). School Admin & Teacher (browse, enquire).',
         'workflow': [
@@ -374,7 +358,7 @@ MODULES = [
         ],
     },
     {
-        'name': '15. Vendor Event Interest',
+        'name': '14. Vendor Event Interest',
         'purpose': 'Let approved vendors flag interest in supporting a specific Yarra event.',
         'roles': 'Vendor (any logged-in user acting for an approved vendor). Super Admin (notified).',
         'workflow': [
@@ -389,7 +373,7 @@ MODULES = [
         ],
     },
     {
-        'name': '16. School Review',
+        'name': '15. School Review',
         'purpose': 'Track a school\'s self-study, review visit, School Improvement Plan, and recommendations cycle.',
         'roles': 'School Leader, Admin, PL Teacher (edit). All staff (view).',
         'workflow': [
@@ -405,7 +389,7 @@ MODULES = [
         ],
     },
     {
-        'name': '17. Leadership Connect',
+        'name': '16. Leadership Connect',
         'purpose': 'A private discussion forum for School Leaders and Admins across the consortium.',
         'roles': 'School Leader / Admin only.',
         'workflow': [
@@ -421,7 +405,7 @@ MODULES = [
         ],
     },
     {
-        'name': '18. Notifications & Activity Log',
+        'name': '17. Notifications & Activity Log',
         'purpose': 'Keep every role aware of state changes relevant to them, and give Super Admin visibility into all platform activity.',
         'roles': 'All (own notifications). Super Admin (sees an activity feed of everyone\'s actions).',
         'workflow': [
@@ -436,7 +420,7 @@ MODULES = [
         ],
     },
     {
-        'name': '19. Consortium Analytics Dashboard',
+        'name': '18. Consortium Analytics Dashboard',
         'purpose': 'A secondary, consortium-wide metrics view -- schools, students, teachers, events, exchanges, vendors, and a school engagement ranking.',
         'roles': 'Super Admin / Admin.',
         'workflow': [

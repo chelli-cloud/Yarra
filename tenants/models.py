@@ -157,35 +157,9 @@ class Profile(models.Model):
         ('student', 'Student'),
     ])
     
-    # Profile Customization
+    # Profile picture is still used for the sidebar avatar, kept even after
+    # removing the My Profile page (set via Django Admin now).
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-    
-    # Basic Information (from images)
-    date_of_birth = models.DateField(null=True, blank=True)
-    mobile_no = models.CharField(max_length=15, blank=True)
-    alternate_mobile_no = models.CharField(max_length=15, blank=True)
-    emergency_contact_no = models.CharField(max_length=15, blank=True)
-    gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], blank=True)
-    blood_group = models.CharField(max_length=5, blank=True)
-    nationality = models.CharField(max_length=50, default='Indian')
-    religion = models.CharField(max_length=50, blank=True)
-    category = models.CharField(max_length=50, blank=True, help_text="e.g. BC, MBC, General")
-    
-    # Other Information
-    aadhaar_no = models.CharField(max_length=12, blank=True)
-    pan_no = models.CharField(max_length=10, blank=True)
-    languages_known = models.CharField(max_length=200, blank=True)
-    extra_curricular = models.TextField(blank=True)
-    
-    # Academic Context
-    campus = models.CharField(max_length=100, blank=True)
-    grade = models.CharField(max_length=50, blank=True, help_text="e.g. Grade 10")
-    section = models.CharField(max_length=50, blank=True, help_text="e.g. Section A")
-    admission_date = models.DateField(null=True, blank=True)
-    
-    # Address
-    permanent_address = models.TextField(blank=True)
-    current_address = models.TextField(blank=True)
 
     class Meta:
         indexes = [

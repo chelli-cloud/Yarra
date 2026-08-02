@@ -459,9 +459,6 @@
                 <a href="{% url 'school_profile' %}" class="nav-link">
                     <span class="nav-icon">🏫</span> School Profile
                 </a>
-                <a href="{% url 'my_profile' %}" class="nav-link">
-                    <span class="nav-icon">👤</span> My Profile
-                </a>
                 <a href="{% url 'review_dashboard' %}" class="nav-link">
                     <span class="nav-icon">📊</span> Reviews
                 </a>
@@ -539,6 +536,19 @@
                     <span style="color: var(--primary)">●</span> {{ user_school.name }}
                 </div>
                 <div style="display: flex; gap: 20px; align-items: center;">
+                    {% if can_switch_role %}
+                    <form method="post" action="{% url 'switch_role' %}" style="margin: 0;">
+                        {% csrf_token %}
+                        <select name="role" onchange="if(this.value){this.form.submit();}" style="padding: 6px 12px; font-size: 0.8rem; width: auto;">
+                            <option value="">🧪 Preview as role…</option>
+                            <option value="school_leader">School Leader</option>
+                            <option value="admin">Admin</option>
+                            <option value="pl_teacher">PL Teacher</option>
+                            <option value="teacher">Teacher</option>
+                            <option value="student">Student</option>
+                        </select>
+                    </form>
+                    {% endif %}
                     <!-- Notification Dropdown -->
                     <div class="notif-container">
                         <button type="button" class="notif-link" id="notif-toggle" style="background: none; border: none; cursor: pointer;">
@@ -578,7 +588,17 @@
                     </div>
                 </div>
             </header>
-            
+
+            {% if is_role_preview %}
+            <div style="background: #FEF3C7; border-bottom: 1px solid #FDE68A; padding: 10px 32px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 600; color: #92400E;">
+                <span>🧪 Previewing as {{ user_profile.get_role_display }} ({{ user_school.name }}) — Super Admin: {{ role_preview_admin.username|default:"unknown" }}</span>
+                <form method="post" action="{% url 'return_to_admin' %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="button ghost" style="padding: 4px 12px; font-size: 0.8rem; color: #92400E;">Return to Super Admin</button>
+                </form>
+            </div>
+            {% endif %}
+
             <main class="page">
                 {% if messages %}
                     <div class="messages">

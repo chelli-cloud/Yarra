@@ -75,14 +75,6 @@ class Command(BaseCommand):
                     user=user,
                     school=school,
                     role=role,
-                    date_of_birth="2005-02-18",
-                    mobile_no="7305774555",
-                    campus="Main Campus",
-                    grade="Grade 10",
-                    section="A",
-                    admission_date="2023-07-01",
-                    permanent_address="No 30a, Thirumurthy Street, Tnagar, Chennai-600017",
-                    current_address="No 30a, Thirumurthy Street, Tnagar, Chennai-600017",
                 )
                 users.append(user)
 

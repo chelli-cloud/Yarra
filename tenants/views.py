@@ -30,49 +30,6 @@ MAX_ADMINS_PER_SCHOOL = 2
 MAX_TEACHERS_PER_SCHOOL = 5
 
 @login_required
-def my_profile(request):
-    """Module: My Profile - personal details management."""
-    try:
-        profile = request.user.profile
-    except Profile.DoesNotExist:
-        if request.user.is_superuser:
-            return redirect('/admin/tenants/profile/add/')
-        return render(request, 'tenants/access_denied.html', {'message': 'Profile missing.'})
-    
-    if request.method == 'POST':
-        profile.date_of_birth = request.POST.get('date_of_birth') or None
-        profile.mobile_no = request.POST.get('mobile_no', '')
-        profile.alternate_mobile_no = request.POST.get('alternate_mobile_no', '')
-        profile.emergency_contact_no = request.POST.get('emergency_contact_no', '')
-        profile.gender = request.POST.get('gender', '')
-        profile.blood_group = request.POST.get('blood_group', '')
-        profile.nationality = request.POST.get('nationality', 'Indian')
-        profile.religion = request.POST.get('religion', '')
-        profile.category = request.POST.get('category', '')
-        profile.aadhaar_no = request.POST.get('aadhaar_no', '')
-        profile.pan_no = request.POST.get('pan_no', '')
-        profile.languages_known = request.POST.get('languages_known', '')
-        profile.extra_curricular = request.POST.get('extra_curricular', '')
-        profile.permanent_address = request.POST.get('permanent_address', '')
-        profile.current_address = request.POST.get('current_address', '')
-        
-        # Academic details (only updated if student)
-        if profile.role == 'student':
-            profile.grade = request.POST.get('grade', '')
-            profile.section = request.POST.get('section', '')
-            profile.campus = request.POST.get('campus', '')
-            profile.admission_date = request.POST.get('admission_date') or None
-        
-        if request.FILES.get('profile_picture'):
-            profile.profile_picture = request.FILES['profile_picture']
-            
-        profile.save()
-        messages.success(request, "Your profile has been updated successfully.")
-        return redirect('my_profile')
-
-    return render(request, 'tenants/my_profile.html', {'profile': profile})
-
-@login_required
 def leadership_connect(request):
     """Module 7: Exclusive forum for School Leaders and Executive roles."""
     profile = get_object_or_404(Profile, user=request.user)
@@ -534,3 +491,53 @@ def create_review_cycle(request):
         )
         return redirect(f"{reverse('review_dashboard')}?cycle_id={review_cycle.pk}")
     return render(request, 'tenants/review_cycle_form.html', {'school': profile.school})
+
+
+@login_required
+def switch_role(request):
+    """Super Admin testing tool: log in as a representative user of the chosen
+    role to preview modules the way that role sees them. Only a real Super
+    Admin, or someone already mid-preview, can use this -- it is not a way
+    for an ordinary user to escalate privileges."""
+    already_previewing = bool(request.session.get('impersonator_id'))
+    if not (request.user.is_superuser or already_previewing):
+        return render(request, 'tenants/access_denied.html', status=403)
+
+    if request.method != 'POST':
+        return redirect('school_profile')
+
+    role = request.POST.get('role')
+    valid_roles = dict(Profile._meta.get_field('role').choices)
+    if role not in valid_roles:
+        messages.error(request, "Invalid role selected.")
+        return redirect('school_profile')
+
+    target_profile = Profile.objects.filter(role=role).select_related('user', 'school').order_by('school__name').first()
+    if not target_profile:
+        messages.error(request, f"No {valid_roles[role]} account exists yet to preview.")
+        return redirect('school_profile')
+
+    # login() flushes the session when the authenticated user changes, so the
+    # original Super Admin id must be captured before the call and restored after.
+    original_id = request.session.get('impersonator_id') or request.user.pk
+    login(request, target_profile.user, backend='django.contrib.auth.backends.ModelBackend')
+    request.session['impersonator_id'] = original_id
+    messages.info(request, f"Previewing as {target_profile.get_role_display()} at {target_profile.school.name}.")
+    return redirect('school_profile')
+
+
+@login_required
+def return_to_admin(request):
+    """Leave role-preview mode and restore the original Super Admin session."""
+    original_id = request.session.get('impersonator_id')
+    if not original_id:
+        return redirect('school_profile')
+
+    original_user = User.objects.filter(pk=original_id, is_superuser=True).first()
+    if not original_user:
+        messages.error(request, "Could not restore your Super Admin session.")
+        return redirect('school_profile')
+
+    login(request, original_user, backend='django.contrib.auth.backends.ModelBackend')
+    messages.success(request, "Back to Super Admin.")
+    return redirect('master_dashboard')
