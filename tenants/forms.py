@@ -1,7 +1,7 @@
 from django import apps
 from django import forms
 from django.contrib.auth.models import User
-from .models import School, Profile, Invitation, SchoolProfileExtended, Payment
+from .models import School, Profile, Invitation, SchoolProfileExtended, Payment, GRADE_LEVELS
 
 class SchoolRegistrationForm(forms.ModelForm):
     admin_email = forms.EmailField(label="Admin Email")
@@ -21,10 +21,43 @@ class SchoolCreateForm(forms.ModelForm):
             'yarra_coordinator_phone', 'membership_tier',
         ]
 
+def _grade_field_name(level):
+    return f"gs_{level.lower().replace(' ', '_')}"
+
+
 class SchoolProfileExtendedForm(forms.ModelForm):
+    """Adds one required student-count field per grade level (Toddler through Grade 12,
+    stored as SchoolProfileExtended.grade_strength) and validates the Mixed/Other
+    curriculum 'specify' field, on top of the plain model fields."""
+
     class Meta:
         model = SchoolProfileExtended
-        exclude = ['school', 'updated_at']
+        exclude = ['school', 'updated_at', 'grade_strength']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        existing_grades = self.instance.grade_strength if self.instance and self.instance.pk else {}
+        for level in GRADE_LEVELS:
+            self.fields[_grade_field_name(level)] = forms.IntegerField(
+                label=level, min_value=0, required=True,
+                initial=existing_grades.get(level),
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        curriculum = cleaned_data.get('curriculum_adopted')
+        if curriculum in ('mixed', 'other') and not cleaned_data.get('curriculum_adopted_other'):
+            self.add_error('curriculum_adopted_other', "Please specify your school's curriculum.")
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.grade_strength = {
+            level: self.cleaned_data.get(_grade_field_name(level)) for level in GRADE_LEVELS
+        }
+        if commit:
+            instance.save()
+        return instance
 
 class PaymentForm(forms.ModelForm):
     class Meta:

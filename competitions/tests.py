@@ -30,11 +30,8 @@ class CompetitionModuleTests(TestCase):
         self.school_leader = User.objects.create_user(username='leader', password='test@1234')
         Profile.objects.create(user=self.school_leader, school=self.school, role='school_leader')
 
-        self.student = User.objects.create_user(username='student', password='test@1234')
-        Profile.objects.create(user=self.student, school=self.school, role='student')
-
-        self.other_student = User.objects.create_user(username='otherstudent', password='test@1234')
-        Profile.objects.create(user=self.other_student, school=self.other_school, role='student')
+        self.other_teacher = User.objects.create_user(username='otherteacher', password='test@1234')
+        Profile.objects.create(user=self.other_teacher, school=self.other_school, role='teacher')
 
         self.superuser = User.objects.create_superuser(username='superadmin', email='super@example.com', password='test@1234')
 
@@ -75,37 +72,44 @@ class CompetitionModuleTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Event.objects.filter(title='Blocked Event').exists())
 
-    def test_student_cannot_create_event(self):
-        self.client.login(username='student', password='test@1234')
-        response = self.client.get(reverse('event_create'))
+    def test_teacher_can_register_a_participant(self):
+        # There's no student self-service login -- staff register participants by name.
+        self.client.login(username='teacher', password='test@1234')
+        response = self.client.post(reverse('register_for_event', args=[self.event.pk]), {
+            'participant_name': 'Arjun Kumar',
+        })
 
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(Event.objects.filter(title='Blocked Event').exists())
-
-    def test_student_can_register_for_event(self):
-        self.client.login(username='student', password='test@1234')
-        response = self.client.post(reverse('register_for_event', args=[self.event.pk]), {})
-
-        self.assertEqual(response.status_code, 302)
-        registration = StudentRegistration.objects.get(event=self.event, student=self.student)
+        registration = StudentRegistration.objects.get(event=self.event, school=self.school)
+        self.assertEqual(registration.participant_name, 'Arjun Kumar')
+        self.assertEqual(registration.registered_by, self.teacher)
         self.assertEqual(registration.payment_status, PaymentStatus.PENDING)
 
-    def test_other_school_student_can_register(self):
-        # Events are Yarra-wide now; any school's students can register for any active event.
-        self.client.login(username='otherstudent', password='test@1234')
+    def test_other_school_staff_can_register_too(self):
+        # Events are Yarra-wide now; any school's staff can register participants for any active event.
+        self.client.login(username='otherteacher', password='test@1234')
+        response = self.client.post(reverse('register_for_event', args=[self.event.pk]), {
+            'participant_name': 'Priya Singh',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(StudentRegistration.objects.filter(event=self.event, school=self.other_school).exists())
+
+    def test_registration_requires_participant_name(self):
+        self.client.login(username='teacher', password='test@1234')
         response = self.client.post(reverse('register_for_event', args=[self.event.pk]), {})
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(StudentRegistration.objects.filter(event=self.event, student=self.other_student).exists())
+        self.assertFalse(StudentRegistration.objects.filter(event=self.event).exists())
 
     def test_superuser_can_delete_event_and_cascades_registrations(self):
-        StudentRegistration.objects.create(event=self.event, student=self.student)
+        StudentRegistration.objects.create(event=self.event, school=self.school, participant_name='Arjun Kumar', registered_by=self.teacher)
         self.client.login(username='superadmin', password='test@1234')
         response = self.client.post(reverse('event_delete', args=[self.event.pk]))
 
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Event.objects.filter(pk=self.event.pk).exists())
-        self.assertFalse(StudentRegistration.objects.filter(student=self.student).exists())
+        self.assertFalse(StudentRegistration.objects.filter(school=self.school).exists())
 
     def test_teacher_cannot_delete_event(self):
         self.client.login(username='teacher', password='test@1234')
@@ -128,7 +132,9 @@ class CompetitionModuleTests(TestCase):
     def test_razorpay_webhook_verifies_payment(self, client_cls):
         registration = StudentRegistration.objects.create(
             event=self.event,
-            student=self.student,
+            school=self.school,
+            participant_name='Arjun Kumar',
+            registered_by=self.teacher,
             razorpay_order_id='order_123',
         )
 

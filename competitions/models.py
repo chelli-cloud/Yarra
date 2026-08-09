@@ -83,10 +83,17 @@ class PaymentStatus(models.TextChoices):
 
 class StudentRegistration(models.Model):
     """
-    Tracks student registration for an event with payment verification.
+    Tracks a participant's registration for an event with payment verification.
+    Participants no longer have their own login -- School Admin/Teacher registers
+    them by name on the school's behalf, so `school`/`participant_name`/`registered_by`
+    are now the source of truth. `student` is kept only for backward compatibility
+    with registrations created before self-service student login was removed.
     """
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
-    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_registrations')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_registrations', null=True, blank=True)
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='event_registrations', null=True, blank=True)
+    participant_name = models.CharField(max_length=150, blank=True)
+    registered_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='registrations_made')
 
     # Razorpay payment tracking
     razorpay_payment_id = models.CharField(max_length=50, blank=True)
@@ -105,15 +112,32 @@ class StudentRegistration(models.Model):
     registered_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('event', 'student')
         ordering = ['-registered_at']
         indexes = [
             models.Index(fields=['event', 'payment_status']),
-            models.Index(fields=['student', 'payment_status']),
+            models.Index(fields=['school', 'payment_status']),
         ]
 
+    @property
+    def display_name(self):
+        return self.participant_name or (self.student.get_full_name() or self.student.username if self.student else 'Participant')
+
     def __str__(self):
-        return f"{self.student.username} - {self.event.title} ({self.payment_status})"
+        return f"{self.display_name} - {self.event.title} ({self.payment_status})"
+
+
+class EventPhoto(models.Model):
+    """Photo gallery for an event, separate from `winning_resources` (which is winner-specific)."""
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='photos')
+    image = models.ImageField(upload_to='competitions/photos/')
+    caption = models.CharField(max_length=200, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f"Photo for {self.event.title}"
 
 
 class CompetitionResult(models.Model):

@@ -66,27 +66,26 @@ def vendor_detail(request, pk):
         'form': form
     })
 
-@login_required
 def vendor_signup(request):
-    """M10: Self-registration for vendors. Students don't have marketplace access."""
-    profile = Profile.objects.filter(user=request.user).first()
-    if profile and profile.role == 'student':
-        return render(request, 'tenants/access_denied.html', {
-            'message': 'The Vendor Marketplace is not available to students.'
-        }, status=403)
-
+    """M10: Public self-registration for vendors -- no login required, since a
+    brand-new vendor has no Yarra account yet."""
     if request.method == 'POST':
         form = VendorRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             vendor = form.save(commit=False)
-            # Link to user if we want them to manage it later
             vendor.save()
-            log_activity(request.user, f"Vendor '{vendor.name}' signed up, pending approval")
+            if request.user.is_authenticated:
+                log_activity(request.user, f"Vendor '{vendor.name}' signed up, pending approval")
+            else:
+                notify_superadmins(
+                    title='New vendor sign-up',
+                    message=f"Vendor '{vendor.name}' submitted a registration and is pending approval.",
+                )
             messages.success(request, "Your registration has been submitted for approval.")
-            return redirect('vendor_list')
+            return redirect('vendor_signup')
     else:
         form = VendorRegistrationForm()
-    
+
     return render(request, 'vendors/vendor_signup.html', {'form': form})
 
 @login_required

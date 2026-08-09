@@ -4,7 +4,6 @@ from .webhooks import razorpay_webhook
 
 urlpatterns = [
     path('', views.event_list, name='event_list'),
-    path('opportunities/', views.opportunity_list, name='opportunity_list'),
     path('create/', views.event_create, name='event_create'),
     path('analytics/', views.sl_analytics, name='sl_analytics'),
     path('payment/verify/', views.verify_payment, name='verify_payment'),

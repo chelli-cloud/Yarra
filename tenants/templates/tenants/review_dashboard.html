@@ -231,6 +231,34 @@
         </form>
     </div>
 
+    {% if evaluator_queries %}
+        <div class="card" style="margin-top: 32px;">
+            <h2 style="margin-bottom: 20px;">Yarra Evaluator Questions</h2>
+            <p class="muted" style="margin-bottom: 24px;">Follow-up questions about your Self Study Questionnaire.</p>
+            {% for query in evaluator_queries %}
+                <div style="padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 16px;">
+                    <p><strong>Q:</strong> {{ query.question }}</p>
+                    <p class="muted" style="font-size: 0.8rem;">Asked {{ query.created_at|date:"M d, Y H:i" }}</p>
+                    {% if query.answer or query.response_document %}
+                        <p style="margin-top: 12px;"><strong>A:</strong> {{ query.answer|default:"(no text, see attached document)" }}</p>
+                        {% if query.response_document %}
+                            <p><a href="{{ query.response_document.url }}">View attached document</a></p>
+                        {% endif %}
+                    {% elif can_answer_queries %}
+                        <form method="post" action="{% url 'evaluator_answer_query' query.pk %}" enctype="multipart/form-data" style="margin-top: 12px;">
+                            {% csrf_token %}
+                            <textarea name="answer" rows="3" placeholder="Your answer"></textarea>
+                            <input type="file" name="response_document" style="margin-top: 8px;">
+                            <button type="submit" class="button secondary" style="margin-top: 8px;">Send Response</button>
+                        </form>
+                    {% else %}
+                        <p class="muted">Awaiting a response from your School Admin.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
     {% if archived_cycles %}
         <div class="card" style="margin-top: 32px;">
             <h2 style="margin-bottom: 20px;">Past Review Archive</h2>

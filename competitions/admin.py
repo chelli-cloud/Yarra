@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Event, EventCategory, StudentRegistration, PaymentStatus, CompetitionResult
+from .models import Event, EventCategory, StudentRegistration, PaymentStatus, CompetitionResult, EventPhoto
 
 
 @admin.register(Event)
@@ -34,10 +34,16 @@ class EventAdmin(admin.ModelAdmin):
 
 @admin.register(StudentRegistration)
 class StudentRegistrationAdmin(admin.ModelAdmin):
-    list_display = ('student', 'event', 'payment_status', 'registered_at')
+    list_display = ('participant_name', 'school', 'event', 'payment_status', 'registered_at')
     list_filter = ('payment_status', 'event')
-    search_fields = ('student__username', 'event__title', 'razorpay_payment_id')
+    search_fields = ('participant_name', 'student__username', 'event__title', 'razorpay_payment_id')
     readonly_fields = ('registered_at',)
+
+
+@admin.register(EventPhoto)
+class EventPhotoAdmin(admin.ModelAdmin):
+    list_display = ('event', 'caption', 'uploaded_at')
+    list_filter = ('event',)
 
 
 @admin.register(CompetitionResult)

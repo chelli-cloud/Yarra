@@ -39,7 +39,7 @@
         </div>
         <div style="background: white; padding: 24px; text-align: center;">
             <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">24</div>
-            <div class="muted" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Competitions</div>
+            <div class="muted" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Events</div>
         </div>
         <div style="background: white; padding: 24px; text-align: center;">
             <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">98%</div>
@@ -146,6 +146,20 @@
             </div>
             {% endif %}
         </div>
+
+        {% if can_edit and school.yarra_coordinator_name %}
+        <div class="card">
+            <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">🧑‍💼</span> Yarra Coordinator
+            </h2>
+            <p class="muted" style="margin-bottom: 16px; font-size: 0.85rem;">Your school's point of contact at Yarra. Set by the Super Admin.</p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div><strong>{{ school.yarra_coordinator_name }}</strong></div>
+                {% if school.yarra_coordinator_email %}<div class="muted">{{ school.yarra_coordinator_email }}</div>{% endif %}
+                {% if school.yarra_coordinator_phone %}<div class="muted">{{ school.yarra_coordinator_phone }}</div>{% endif %}
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Membership Status -->
         <div class="card" style="border: 1px solid var(--border);">

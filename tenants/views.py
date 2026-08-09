@@ -9,12 +9,14 @@ from django.http import HttpResponse
 from .models import (
     School, Profile, ReviewCycle, DiscussionThread, ThreadReply,
     Notification, Invitation, SchoolProfileExtended, SchoolDocument, Payment, ActivityLog,
+    YarraEvaluator, EvaluatorQuery,
 )
 from .forms import (
     InvitationForm, SchoolRegistrationForm, UserRegistrationForm,
     SchoolCreateForm, SchoolProfileExtendedForm, PaymentForm,
 )
-from .notifications import log_activity
+from .notifications import log_activity, create_notification
+from django.utils import timezone
 import secrets
 
 REVIEW_STATUS_DISPLAY = {
@@ -237,6 +239,8 @@ def review_dashboard(request):
         selected_cycle.save()
         return redirect('review_dashboard')
 
+    evaluator_queries = EvaluatorQuery.objects.filter(review_cycle=selected_cycle).select_related('evaluator') if selected_cycle else []
+
     return render(request, 'tenants/review_dashboard.html', {
         'school': school,
         'review_cycle': selected_cycle,
@@ -247,11 +251,100 @@ def review_dashboard(request):
         'is_archived_selection': is_archived_selection,
         'selected_cycle_is_active': selected_cycle is not None and active_cycle is not None and selected_cycle.pk == active_cycle.pk,
         'review_status_choices': ReviewCycle._meta.get_field('self_study_status').choices,
+        'evaluator_queries': evaluator_queries,
+        'can_answer_queries': profile.role in PROFILE_EDIT_ROLES,
     })
+
+
+@login_required
+def evaluator_dashboard(request):
+    """Yarra Evaluator: cross-school list of review cycles and their Self Study Questionnaires."""
+    if not hasattr(request.user, 'yarraevaluator'):
+        return render(request, 'tenants/access_denied.html', {
+            'message': 'This area is only available to Yarra Evaluators.'
+        }, status=403)
+
+    schools = School.objects.filter(review_cycles__isnull=False).distinct().order_by('name')
+    latest_cycles = {
+        rc.school_id: rc for rc in ReviewCycle.objects.filter(school__in=schools).order_by('school_id', '-created_at')
+    }
+
+    return render(request, 'tenants/evaluator_dashboard.html', {
+        'rows': [(school, latest_cycles.get(school.pk)) for school in schools],
+    })
+
+
+@login_required
+def evaluator_review_detail(request, school_pk):
+    """Yarra Evaluator: view a school's Self Study Questionnaire and ask a follow-up question."""
+    if not hasattr(request.user, 'yarraevaluator'):
+        return render(request, 'tenants/access_denied.html', {
+            'message': 'This area is only available to Yarra Evaluators.'
+        }, status=403)
+
+    school = get_object_or_404(School, pk=school_pk)
+    review_cycle = ReviewCycle.objects.filter(school=school).order_by('-created_at').first()
+
+    if request.method == 'POST' and review_cycle:
+        question = request.POST.get('question', '').strip()
+        if question:
+            query = EvaluatorQuery.objects.create(
+                review_cycle=review_cycle,
+                evaluator=request.user,
+                question=question,
+            )
+            for recipient in User.objects.filter(profile__school=school, profile__role__in=PROFILE_EDIT_ROLES):
+                create_notification(
+                    recipient=recipient,
+                    title='Yarra Evaluator question',
+                    message=f"A Yarra Evaluator asked a question about your Self Study Questionnaire: \"{question[:120]}\"",
+                    level='info',
+                    target_url=reverse('review_dashboard'),
+                    data={'evaluator_query_id': query.pk},
+                )
+            messages.success(request, "Question sent to the School Admin.")
+        return redirect('evaluator_review_detail', school_pk=school.pk)
+
+    queries = EvaluatorQuery.objects.filter(review_cycle=review_cycle) if review_cycle else []
+
+    return render(request, 'tenants/evaluator_review_detail.html', {
+        'school': school,
+        'review_cycle': review_cycle,
+        'queries': queries,
+    })
+
+
+@login_required
+def evaluator_answer_query(request, pk):
+    """School Admin/Leader answers a Yarra Evaluator's follow-up question."""
+    query = get_object_or_404(EvaluatorQuery, pk=pk)
+    profile = get_object_or_404(Profile, user=request.user)
+
+    if profile.school_id != query.review_cycle.school_id or profile.role not in PROFILE_EDIT_ROLES:
+        messages.error(request, "You don't have permission to answer this question.")
+        return redirect('review_dashboard')
+
+    if request.method == 'POST':
+        query.answer = request.POST.get('answer', '')
+        if request.FILES.get('response_document'):
+            query.response_document = request.FILES['response_document']
+        query.answered_at = timezone.now()
+        query.save()
+        create_notification(
+            recipient=query.evaluator,
+            title='School responded to your question',
+            message=f"{request.user.username} answered your question about {query.review_cycle.school.name}'s Self Study Questionnaire.",
+            level='info',
+            target_url=reverse('evaluator_review_detail', args=[query.review_cycle.school_id]),
+            data={'evaluator_query_id': query.pk},
+        )
+        messages.success(request, "Your response has been sent to the Yarra Evaluator.")
+
+    return redirect('review_dashboard')
 
 @login_required
 def invite_user(request):
-    """Module M1: School Admin invites teachers and students.
+    """Module M1: School Admin invites admins and teachers.
     Enforces max 2 admins and max 5 teachers per school."""
     profile = get_object_or_404(Profile, user=request.user)
     if profile.role not in ['admin', 'school_leader']:
@@ -405,7 +498,7 @@ def complete_school_profile(request):
             uploaded_files = request.FILES.getlist('documents')
             if len(uploaded_files) > 10:
                 messages.error(request, "You can upload up to 10 files.")
-                return render(request, 'tenants/complete_school_profile.html', {'form': form, 'school': school})
+                return render(request, 'tenants/complete_school_profile.html', {'form': form, 'school': school, 'grade_fields': [form[name] for name in form.fields if name.startswith('gs_')]})
             for f in uploaded_files:
                 SchoolDocument.objects.create(school=school, file=f, uploaded_by=request.user)
 
@@ -417,7 +510,8 @@ def complete_school_profile(request):
     else:
         form = SchoolProfileExtendedForm(instance=extended)
 
-    return render(request, 'tenants/complete_school_profile.html', {'form': form, 'school': school})
+    grade_fields = [form[name] for name in form.fields if name.startswith('gs_')]
+    return render(request, 'tenants/complete_school_profile.html', {'form': form, 'school': school, 'grade_fields': grade_fields})
 
 
 @login_required

@@ -24,7 +24,7 @@ def generate_invoice_pdf(registration):
     p.drawString(100, height - 180, f"Date: {timezone.now().strftime('%d %B %Y')}")
     
     p.setFont("Helvetica", 12)
-    p.drawString(100, height - 220, f"Student: {registration.student.get_full_name() or registration.student.username}")
+    p.drawString(100, height - 220, f"Participant: {registration.display_name}")
     p.drawString(100, height - 240, f"Event: {registration.event.title}")
     p.drawString(100, height - 260, f"Payment ID: {registration.razorpay_payment_id}")
     
@@ -58,7 +58,7 @@ def generate_invoice_pdf(registration):
 
 
 def generate_certificate_pdf(registration):
-    """M6: Generates a PDF attendance certificate for a student's event registration."""
+    """M6: Generates a PDF attendance certificate for a participant's event registration."""
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
@@ -78,9 +78,8 @@ def generate_certificate_pdf(registration):
     p.setFillColorRGB(0, 0, 0)
     p.drawCentredString(width / 2, height - 220, "This certificate is proudly presented to")
 
-    student_name = registration.student.get_full_name() or registration.student.username
     p.setFont("Helvetica-Bold", 24)
-    p.drawCentredString(width / 2, height - 270, student_name)
+    p.drawCentredString(width / 2, height - 270, registration.display_name)
 
     p.setFont("Helvetica", 14)
     p.drawCentredString(width / 2, height - 320, "for participating in")

@@ -8,6 +8,8 @@ from tenants.models import School, Profile, DiscussionThread, ThreadReply
 from competitions.models import Event, EventCategory, CompetitionResult
 
 SEED_USERNAME_PATTERN = re.compile(r'^(school_leader|admin|pl_teacher|teacher|student)_\d+$')
+# NOTE: 'student' stays in the pattern (not the roles list below) so reruns still clean up
+# any leftover student_<id> accounts created before self-service student login was removed.
 
 class Command(BaseCommand):
     help = 'Seed the database with 10 schools and comprehensive sample data'
@@ -41,7 +43,7 @@ class Command(BaseCommand):
             ("St. Paul's School", "Darjeeling, WB", "Classic Education, Choir, Nature"),
         ]
 
-        roles = ['school_leader', 'admin', 'pl_teacher', 'teacher', 'student']
+        roles = ['school_leader', 'admin', 'pl_teacher', 'teacher']
         
         for name, loc, offerings in schools_data:
             school = School.objects.create(
@@ -78,10 +80,10 @@ class Command(BaseCommand):
                 )
                 users.append(user)
 
-            # Create Events & Opportunities for each school
+            # Create Events for each school
             staff_user = User.objects.get(username=f"teacher_{school.pk}")
-            
-            # 3 Competitions
+
+            # 3 Events
             comp_types = [EventCategory.YARRA_ACTION, EventCategory.YARRA_SPOTLIGHT, EventCategory.YARRA_ACTIVE]
             for i, cat in enumerate(comp_types):
                 event = Event.objects.create(
@@ -109,18 +111,6 @@ class Command(BaseCommand):
                         prize="Runner-up"
                     )
 
-            # 2 Opportunities
-            for i in range(2):
-                Event.objects.create(
-                    school=school,
-                    created_by=staff_user,
-                    title=f"Opportunity: {['Global Scholarship', 'Summer Internship'][i]}",
-                    description=f"Exciting opportunity for {school.name} students to excel in their chosen fields with external partners.",
-                    category=EventCategory.OPPORTUNITY,
-                    registration_link="https://forms.gle/opportunity",
-                    is_active=True
-                )
-
             # Leadership Discussions (only for first few schools to keep it manageable)
             if school.pk <= 3:
                 leader_user = User.objects.get(username=f"school_leader_{school.pk}")
@@ -138,5 +128,5 @@ class Command(BaseCommand):
         self.stdout.write('\n--- LOGIN DETAILS ---')
         self.stdout.write('Password for all users: test@1234')
         self.stdout.write('\nFormat: [role]_[school_id]')
-        self.stdout.write('Roles: school_leader, admin, pl_teacher, teacher, student')
-        self.stdout.write('Example: student_1 (School 1), teacher_2 (School 2), etc.')
+        self.stdout.write('Roles: school_leader, admin, pl_teacher, teacher')
+        self.stdout.write('Example: teacher_1 (School 1), admin_2 (School 2), etc.')

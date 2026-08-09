@@ -54,10 +54,10 @@
                 <!-- Registration Links -->
                 <h2 style="margin-top: 24px;">Registration</h2>
                 <div style="margin-bottom: 14px;">
-                    <label for="registration_link">Google Form Link</label>
+                    <label for="registration_link">Reference Link (e.g. Google Form)</label>
                     <input type="url" name="registration_link" id="registration_link"
                            value="{{ event.registration_link|default:'' }}" required>
-                    <p class="muted">Students will be redirected to this Google Form for registration.</p>
+                    <p class="muted">Optional external link for reference; participants are registered directly by School Admin/Teacher within Yarra.</p>
                 </div>
 
                 <div style="margin-bottom: 14px;">
@@ -111,6 +111,14 @@
                     <p class="muted">Current: {{ event.presentation_file.name }}</p>
                     {% endif %}
                     <input type="file" name="presentation_file" id="presentation_file">
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label for="event_photos">Event Photos</label>
+                    {% if event.photos.all %}
+                    <p class="muted">{{ event.photos.count }} photo{{ event.photos.count|pluralize }} already uploaded.</p>
+                    {% endif %}
+                    <input type="file" name="event_photos" id="event_photos" accept="image/*" multiple>
                 </div>
 
                 <div style="margin-bottom: 14px;">

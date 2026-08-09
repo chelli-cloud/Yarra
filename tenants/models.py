@@ -7,6 +7,34 @@ REVIEW_STATUS_CHOICES = [
     ('completed', 'Completed'),
 ]
 
+INDIAN_STATES = [
+    ('andhra_pradesh', 'Andhra Pradesh'), ('arunachal_pradesh', 'Arunachal Pradesh'),
+    ('assam', 'Assam'), ('bihar', 'Bihar'), ('chhattisgarh', 'Chhattisgarh'), ('goa', 'Goa'),
+    ('gujarat', 'Gujarat'), ('haryana', 'Haryana'), ('himachal_pradesh', 'Himachal Pradesh'),
+    ('jharkhand', 'Jharkhand'), ('karnataka', 'Karnataka'), ('kerala', 'Kerala'),
+    ('madhya_pradesh', 'Madhya Pradesh'), ('maharashtra', 'Maharashtra'), ('manipur', 'Manipur'),
+    ('meghalaya', 'Meghalaya'), ('mizoram', 'Mizoram'), ('nagaland', 'Nagaland'),
+    ('odisha', 'Odisha'), ('punjab', 'Punjab'), ('rajasthan', 'Rajasthan'), ('sikkim', 'Sikkim'),
+    ('tamil_nadu', 'Tamil Nadu'), ('telangana', 'Telangana'), ('tripura', 'Tripura'),
+    ('uttar_pradesh', 'Uttar Pradesh'), ('uttarakhand', 'Uttarakhand'), ('west_bengal', 'West Bengal'),
+    ('andaman_nicobar', 'Andaman and Nicobar Islands'), ('chandigarh', 'Chandigarh'),
+    ('dnh_dd', 'Dadra and Nagar Haveli and Daman and Diu'), ('delhi', 'Delhi'),
+    ('jammu_kashmir', 'Jammu and Kashmir'), ('ladakh', 'Ladakh'), ('lakshadweep', 'Lakshadweep'),
+    ('puducherry', 'Puducherry'),
+]
+
+CURRICULUM_CHOICES = [
+    ('matric_state', 'Matric / State Board'), ('cbse', 'CBSE'), ('icse', 'ICSE'),
+    ('cambridge', 'Cambridge'), ('ed_excel', 'Ed Excel'), ('ib', 'IB'),
+    ('mixed', 'Mixed (specify)'), ('other', 'Other (specify)'),
+]
+
+GRADE_LEVELS = [
+    'Toddler', 'Nursery', 'LKG', 'UKG',
+    'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
+    'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12',
+]
+
 class School(models.Model):
     MEMBERSHIP_TIERS = [
         ('free', 'Free'),
@@ -24,7 +52,7 @@ class School(models.Model):
     email = models.EmailField(blank=True)
 
     # Location (filled by Super Admin at creation)
-    state = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, choices=INDIAN_STATES, blank=True)
     country = models.CharField(max_length=100, blank=True)
 
     # Yarra Coordinator (filled by Super Admin at creation)
@@ -53,38 +81,45 @@ class School(models.Model):
 
 
 class SchoolProfileExtended(models.Model):
-    """Extended school registration data collected from School Admin after account creation."""
+    """Extended school registration data collected from School Admin after account creation.
+    Structured into 5 sections per Ms Chelli's July 2027 School Profile spec:
+    School Details, Curriculum Details, Infrastructure Details, Teacher Professional
+    Development, and School Vision."""
     school = models.OneToOneField(School, on_delete=models.CASCADE, related_name='extended_profile')
 
-    year_established = models.PositiveIntegerField(null=True, blank=True)
-    district = models.CharField(max_length=150, blank=True)
+    # 1. SCHOOL DETAILS
+    year_established = models.PositiveIntegerField(null=True, blank=True, verbose_name="Year of Establishment")
+    address_line1 = models.CharField(max_length=255, blank=True, verbose_name="Address Line 1")
+    address_line2 = models.CharField(max_length=255, blank=True, verbose_name="Address Line 2")
+    pincode = models.CharField(max_length=10, blank=True)
     association = models.CharField(max_length=200, blank=True, help_text="Association the school is a part of")
-    curriculum_adopted = models.CharField(max_length=200, blank=True)
     grades_offered = models.CharField(max_length=200, blank=True)
-    total_learners = models.PositiveIntegerField(null=True, blank=True)
-
-    form_filled_by_name = models.CharField(max_length=150, blank=True)
-    form_filled_by_designation = models.CharField(max_length=150, blank=True)
-    form_filled_by_contact = models.CharField(max_length=20, blank=True)
-
+    grade_strength = models.JSONField(default=dict, blank=True, help_text="Number of students per grade, Toddler through Grade 12")
     parent_demographics = models.TextField(blank=True)
-    fee_structure = models.TextField(blank=True)
+    fee_structure_min = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Fee Structure (From)")
+    fee_structure_max = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Fee Structure (To)")
 
     principal_name = models.CharField(max_length=150, blank=True)
     principal_contact = models.CharField(max_length=20, blank=True)
-    communication_email = models.EmailField(blank=True)
 
-    curriculum_change_reason = models.TextField(blank=True)
-    vision_5_years = models.TextField(blank=True)
-    success_definition = models.TextField(blank=True)
-    curriculum_expectations = models.TextField(blank=True)
+    # 2. CURRICULUM DETAILS
+    curriculum_adopted = models.CharField(max_length=20, choices=CURRICULUM_CHOICES, blank=True)
+    curriculum_adopted_other = models.CharField(max_length=200, blank=True, verbose_name="If Mixed/Other, please specify")
+    curriculum_planning_description = models.TextField(blank=True, help_text="Annual Curriculum Planning process (150-200 words)")
+    assessment_practices = models.TextField(blank=True)
 
+    # 3. INFRASTRUCTURE DETAILS
     built_up_area = models.CharField(max_length=100, blank=True)
     classroom_infrastructure = models.TextField(blank=True)
-    pd_programs_impact = models.TextField(blank=True)
+
+    # 4. TEACHER PROFESSIONAL DEVELOPMENT
+    pd_programs_impact = models.TextField(blank=True, verbose_name="Professional Development Plan for Teachers")
     immediate_support_needed = models.TextField(blank=True)
 
-    curriculum_planning_description = models.TextField(blank=True)
+    # 5. SCHOOL VISION
+    vision_5_years = models.TextField(blank=True, verbose_name="School's Vision for Learning")
+    focus_areas_2_5_years = models.TextField(blank=True, verbose_name="Focus for the next 2-5 years")
+    key_strengths = models.TextField(blank=True)
 
     # M13: School Profile Pages
     achievements = models.TextField(blank=True, help_text="Achievements and highlights, one per line")
@@ -158,7 +193,6 @@ class Profile(models.Model):
         ('admin', 'Admin'),
         ('pl_teacher', 'PL Teacher'),
         ('teacher', 'Teacher'),
-        ('student', 'Student'),
     ])
     
     # Profile picture is still used for the sidebar avatar, kept even after
@@ -206,6 +240,38 @@ class ReviewCycle(models.Model):
 
     def __str__(self):
         return f"{self.school.name} - {self.title}"
+
+
+class YarraEvaluator(models.Model):
+    """Marks a user as a Yarra Evaluator: cross-school read access to Self Study
+    Questionnaires plus the ability to ask a School Admin follow-up questions.
+    Deliberately not a `Profile` (which is locked to one school) and not layered
+    on `is_staff` (already gates the Super Admin dashboard/CSV export/broadcast
+    tools). Provisioned via Django Admin by a Super Admin."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Yarra Evaluator: {self.user.username}"
+
+
+class EvaluatorQuery(models.Model):
+    """A follow-up question a Yarra Evaluator asks about a school's Self Study
+    Questionnaire. Notifies the School Admin/Leader, who can answer and/or
+    attach a document in response."""
+    review_cycle = models.ForeignKey('ReviewCycle', on_delete=models.CASCADE, related_name='evaluator_queries')
+    evaluator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='evaluator_queries')
+    question = models.TextField()
+    answer = models.TextField(blank=True)
+    response_document = models.FileField(upload_to='review_documents/evaluator_responses/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    answered_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Query on {self.review_cycle} by {self.evaluator.username}"
 
 
 class DiscussionThread(models.Model):
@@ -269,7 +335,6 @@ class Invitation(models.Model):
     role = models.CharField(max_length=20, choices=[
         ('admin', 'Admin'),
         ('teacher', 'Teacher'),
-        ('student', 'Student'),
     ])
     token = models.CharField(max_length=100, unique=True)
     is_used = models.BooleanField(default=False)

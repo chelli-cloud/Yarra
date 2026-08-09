@@ -56,23 +56,23 @@ styles.add(ParagraphStyle('TOC', parent=styles['Normal'], fontSize=11, textColor
 # Content data -- edit this when modules change, then rerun the script.
 # ---------------------------------------------------------------------------
 
-ROLES = ['Super Admin', 'School Admin', 'Teacher', 'Student', 'Vendor']
+ROLES = ['Super Admin', 'School Admin', 'Teacher', 'Yarra Evaluator', 'Vendor']
 
 ROLE_MATRIX = [
-    ['Module', 'Super Admin', 'School Admin', 'Teacher', 'Student', 'Vendor'],
+    ['Module', 'Super Admin', 'School Admin', 'Teacher', 'Yarra Evaluator', 'Vendor'],
     ['Dashboard', 'Full', 'Own school', 'Limited', 'No', 'No'],
     ['User Management', 'Full (all schools)', 'Own school (max 2 admins, 5 teachers)', 'No', 'No', 'No'],
     ['School Onboarding', 'Creates (basic data)', 'Completes extended profile', 'No', 'No', 'No'],
     ['School Profile / Dashboard', 'Full', 'Own school (edit)', 'View', 'No', 'No'],
-    ['Payments & Invoices', 'Full (any school)', 'Own school', 'No', 'Own invoice', 'No'],
-    ['Events', 'Create / edit / delete', 'View, manage school participation', 'View', 'Register & pay', 'No'],
+    ['Payments & Invoices', 'Full (any school)', 'Own school', 'No', 'No', 'No'],
+    ['Events', 'Create / edit / delete', 'Register participants, manage', 'Register participants, manage', 'No', 'No'],
     ['Student Exchange', 'Oversight', 'Create / manage', 'View & apply', 'No', 'No'],
     ['Content Library', 'Approve / reject', 'Submit', 'View / comment', 'No', 'No'],
-    ['Vendor Sign-up', 'Approves', 'No', 'No', 'No', 'Applies'],
+    ['Vendor Sign-up', 'Approves', 'No', 'No', 'No', 'Applies (no login needed)'],
     ['Vendor Marketplace', 'Approve promotions', 'Enquire / request', 'Enquire / request', 'No', 'Managed via Admin'],
     ['Vendor Event Interest', 'Notified', 'No', 'No', 'No', 'Applies'],
     ['School Network', 'View', 'View & contact', 'View only', 'No', 'No'],
-    ['School Review', 'View', 'Edit (Leader/Admin/PL Teacher)', 'View', 'No', 'No'],
+    ['School Review', 'View', 'Edit (Leader/Admin/PL Teacher)', 'View', 'View Self Study + ask questions', 'No'],
     ['Leadership Connect', 'No', 'Yes (Leader/Admin only)', 'No', 'No', 'No'],
     ['Notifications & Activity', 'Sees all activity', 'Own', 'Own', 'Own', 'No'],
     ['Consortium Analytics', 'Yes (direct URL)', 'No', 'No', 'No', 'No'],
@@ -101,20 +101,25 @@ ROLE_STORIES = {
         'Submit content for the library and know it stays private until Yarra approves it.',
         'Contact another school\'s Yarra Coordinator directly from the School Network.',
         'Showcase our achievements and leadership team on our school profile.',
+        'Register our students for a Yarra event by name, without them needing their own login.',
+        'Answer a Yarra Evaluator\'s question about our Self Study Questionnaire, with an optional document attached.',
     ],
     'Teacher': [
         'View events, exchanges, content, vendors, and the school network without needing edit access.',
+        'Register a participant for an active event and pay online via Razorpay, or upload proof if online payment isn\'t configured.',
+        'Mark attendance, download a certificate, and record feedback on a participant\'s behalf once they\'ve attended.',
         'View Open, Applied, Under Review, and Matched exchanges, and apply to open ones.',
         'Browse the content library, filter by type, save items for later, and like or report a comment.',
         'Browse the school network for collaboration ideas, without being able to contact other schools directly.',
     ],
-    'Student': [
-        'Register for an active event and pay online via Razorpay, or upload proof if online payment isn\'t configured.',
-        'Download a PDF invoice once my payment is verified.',
-        'Submit feedback for an event once I\'ve attended it, and download a certificate of participation.',
+    'Yarra Evaluator': [
+        'View any school\'s Self Study Questionnaire without needing a School Admin to send it separately.',
+        'Ask a follow-up question about a school\'s self study submission and have the School Admin notified immediately.',
+        'See the School Admin\'s answer (text and/or an attached document) once they respond, right on the same page.',
     ],
     'Vendor': [
-        'Apply through Vendor Sign-up with our brochure and catalog, and wait for Super Admin approval.',
+        'Sign up for the marketplace directly from the login page, with no Yarra account needed first.',
+        'Submit our brochure and catalog alongside our profile, and wait for Super Admin approval.',
         'Send enquiries to schools and track their status once approved.',
         'Apply to support an upcoming Yarra event and know the Super Admin will see the request.',
     ],
@@ -222,37 +227,41 @@ MODULES = [
     },
     {
         'name': '6. School Profile / School Dashboard',
-        'purpose': 'The school\'s home base -- branding, membership status, and admin actions.',
+        'purpose': 'The school\'s home base -- branding, membership status, and a structured registration profile.',
         'roles': 'Super Admin (any school). School Admin / School Leader (own school, editable). Others (view own school).',
         'workflow': [
-            'View logo, location, contact person, membership tier, social links, achievements/highlights, and leadership team.',
+            'View logo, location, contact person, membership tier, social links, achievements/highlights, leadership team, and (for the school\'s own staff) the assigned Yarra Coordinator\'s contact details.',
             'School Admin edits branding, contact details, and social links; uploads a logo.',
+            'The extended registration profile is organized into 5 sections: School Details (address, state, Grades & Number of Students table covering Toddler through Grade 12, fee range, principal contact), Curriculum Details (board dropdown with a "specify" field for Mixed/Other, annual planning description, assessment practices), Infrastructure Details, Teacher Professional Development, and School Vision (5-year vision, 2-5 year focus areas, key strengths).',
+            'Every grade level in the Grades & Number of Students table is mandatory -- the form will not save until all 16 counts are filled in.',
             'Achievements and leadership team are entered as part of the extended profile and displayed on the school\'s page.',
             'Admin panel links out to Complete Extended Profile, Invite Staff, User Management, and Payment History.',
         ],
         'stories': [
             'As a School Admin, I want to update our logo and social links myself.',
-            'As a School Admin, I want to showcase our achievements and leadership team on our profile.',
+            'As a School Admin, I want a single structured form for our school\'s registration details, grouped the way Yarra reviews them.',
+            'As a School Admin, I want to see our assigned Yarra Coordinator\'s contact details without having to ask Super Admin.',
             'As a Super Admin, I want to open and, if needed, edit any school\'s profile from the Master Dashboard.',
         ],
         'acceptance': [
             'Only School Leader/Admin roles can edit; everyone else gets a read-only view.',
+            'State is selected from a fixed list of Indian states/UTs, not free text.',
         ],
     },
     {
         'name': '7. Payments & Invoices',
         'purpose': 'Record and track membership and event payments.',
-        'roles': 'Super Admin (any school). School Admin (own school). Student (own invoice).',
+        'roles': 'Super Admin (any school). School Admin / Teacher (own school).',
         'workflow': [
             'Open Record Payment; Super Admin chooses which school, School Admin is auto-scoped to their own.',
             'Enter amount, method (online / cheque / bank transfer / cash / other), notes, and an optional receipt file.',
             'Payment History lists every payment (Super Admin sees all schools, School Admin their own), each with a downloadable PDF invoice.',
-            'Students separately download a PDF invoice once their event registration payment is verified.',
+            'For event registrations, staff separately download a PDF invoice for a participant once that registration\'s payment is verified.',
         ],
         'stories': [
             'As a Super Admin, I want to record a cheque payment on a school\'s behalf if their admin can\'t.',
             'As a School Admin, I want to see our full payment history and download an invoice for any past payment.',
-            'As a Student, I want a proper invoice once my payment clears.',
+            'As a School Admin, I want an invoice for a participant\'s event registration once their payment clears.',
         ],
         'acceptance': [
             'Cheque is a supported payment method, per the explicit requirement.',
@@ -262,27 +271,28 @@ MODULES = [
     },
     {
         'name': '8. Events',
-        'purpose': 'Run Yarra-wide competitions, workshops, and opportunities.',
-        'roles': 'Super Admin (create/edit/delete). School Admin & Teacher (view, manage own school\'s participation). Student (register).',
+        'purpose': 'Run Yarra-wide events -- competitions, workshops, and activities -- with participants registered directly by school staff.',
+        'roles': 'Super Admin (create/edit/delete). School Admin & Teacher (register participants, manage own school\'s participation).',
         'workflow': [
             'Super Admin creates an event: category, format, capacity, Pro-Bono or Paid fee type, registration link, brochure.',
             'Every school sees the event -- it is not scoped to one school.',
-            'Students register; Razorpay checkout runs if configured, otherwise a manual payment-proof upload is accepted.',
-            'School staff mark attendance and log competition results for their own school\'s students.',
-            'After the event, a recording link and presentation file can be attached.',
-            'Once a student is marked attended, they can download a PDF certificate of participation.',
+            'School Admin or Teacher registers a participant by name on the event page; Razorpay checkout runs if configured, otherwise a manual payment-proof upload is accepted.',
+            'School staff mark attendance, log competition results, and record feedback for their own school\'s registered participants.',
+            'After the event, a recording link, presentation file, and a photo gallery can be attached.',
+            'Once a participant is marked attended, staff can download their PDF certificate of participation.',
             'Staff can export an event\'s attendee list as CSV from the Participant Records page.',
             'Deleting an event cascades its registrations and results -- no orphan records are left behind.',
         ],
         'stories': [
             'As a Super Admin, I want to create Yarra events so every member school can take part.',
-            'As a School Admin, I want to track which of our students registered and attended, and export that list.',
-            'As a Student, I want to register and pay, and download a certificate once I\'ve attended.',
+            'As a School Admin, I want to register our students for an event by name, without them needing a login of their own.',
+            'As a Teacher, I want to mark attendance and download a certificate on a participant\'s behalf once they\'ve attended.',
         ],
         'acceptance': [
             'Create, edit, and delete permissions exist only for Super Admin.',
             'Participant Records (grouped by school) are reached from the event page, not the main dashboard.',
             'A certificate is only downloadable once attendance is actually marked.',
+            'There is no student self-service login for events -- registration, payment, attendance, certificates, invoices, and feedback are all handled by school staff on the participant\'s behalf.',
         ],
     },
     {
@@ -347,18 +357,21 @@ MODULES = [
     },
     {
         'name': '12. Vendor Sign-up',
-        'purpose': 'Let prospective vendors apply to join the marketplace.',
-        'roles': 'Vendor applicant (any logged-in user, acting on the vendor\'s behalf). Super Admin (approves).',
+        'purpose': 'Let prospective vendors apply to join the marketplace, with no Yarra account required first.',
+        'roles': 'Vendor applicant (public -- no login required). Super Admin (approves).',
         'workflow': [
-            'Open Vendor Sign-up and submit name, category, description, contact details, website, logo, brochure, and catalog.',
+            'A "Sign up as a Vendor" link on the public login page opens Vendor Sign-up, reachable without an existing account.',
+            'Submit name, category, description, contact details, website, logo, brochure, and catalog.',
             'The application saves as unapproved.',
             'Super Admin approves via Django Admin, which unlocks marketplace visibility.',
         ],
         'stories': [
+            'As a vendor, I want to sign up without first needing a Yarra login I have no way of getting.',
             'As a vendor, I want to submit our brochure and catalog alongside our profile so schools can properly evaluate us.',
         ],
         'acceptance': [
             'Unapproved vendors never appear in the public marketplace listing.',
+            'The sign-up page works for both a signed-out visitor and an already logged-in user.',
         ],
     },
     {
@@ -397,14 +410,16 @@ MODULES = [
     {
         'name': '15. School Review',
         'purpose': 'Track a school\'s self-study, review visit, School Improvement Plan, and recommendations cycle.',
-        'roles': 'School Leader, Admin, PL Teacher (edit). All staff (view).',
+        'roles': 'School Leader, Admin, PL Teacher (edit). All staff (view). Yarra Evaluator (view Self Study + ask questions, see Module 20).',
         'workflow': [
             'Create a review cycle.',
             'Update status, dates, and a supporting document for each of the four stages.',
+            'Any open Yarra Evaluator questions about the Self Study Questionnaire appear on this page for School Leader/Admin to answer.',
             'Browse previously archived cycles.',
         ],
         'stories': [
             'As a PL Teacher, I want to log our self-study progress and attach the supporting document.',
+            'As a School Admin, I want to see and answer a Yarra Evaluator\'s question right here, without a separate email thread.',
         ],
         'acceptance': [
             'Only the active cycle is editable; archived cycles are read-only.',
@@ -460,16 +475,38 @@ MODULES = [
         'purpose': 'Let the Super Admin click through the app exactly as another role sees it, for testing and support -- without a second login.',
         'roles': 'Super Admin only.',
         'workflow': [
-            'A "Preview as role" dropdown in the top bar (visible only to a real Super Admin, or someone already mid-preview) lists School Leader, Admin, PL Teacher, Teacher, and Student.',
+            'A "Preview as role" dropdown in the top bar (visible only to a real Super Admin, or someone already mid-preview) lists School Leader, Admin, PL Teacher, and Teacher.',
             'Selecting a role logs the Super Admin in as a representative account of that role.',
             'A persistent banner shows who is being previewed, with a one-click "Return to Super Admin".',
         ],
         'stories': [
-            'As a Super Admin, I want to preview the app as a Teacher or Student so I can verify a module works correctly for that role, or help a school troubleshoot.',
+            'As a Super Admin, I want to preview the app as a Teacher so I can verify a module works correctly for that role, or help a school troubleshoot.',
         ],
         'acceptance': [
             'Only a real Super Admin can start a preview; an ordinary user has no way to trigger it, even by guessing the URL.',
-            'Vendor isn\'t in the list -- vendors aren\'t a platform login role, so there\'s no account to preview as.',
+            'Vendor and Yarra Evaluator aren\'t in the list -- neither is a school-scoped Profile role, so there\'s no representative account to preview as.',
+            'There is no student self-service login, so Student was removed from the previewable roles.',
+        ],
+    },
+    {
+        'name': '20. Yarra Evaluator & Self Study Q&A',
+        'purpose': 'Give Yarra a cross-school reviewer role that can read Self Study Questionnaires and ask schools follow-up questions.',
+        'roles': 'Yarra Evaluator (view + ask). School Leader / Admin (answer).',
+        'workflow': [
+            'Super Admin provisions a Yarra Evaluator account via Django Admin -- it is not a school-scoped Profile role, so it is created separately from the usual invite flow.',
+            'The Evaluator opens their dashboard and sees every school\'s latest review cycle and Self Study status.',
+            'Opening a school shows its Self Study Questionnaire document and a form to ask a question.',
+            'Submitting a question notifies that school\'s Leader/Admin and creates an entry they can see on School Review.',
+            'The school answers with text and/or an attached document; the Evaluator is notified and sees the answer on the same page.',
+        ],
+        'stories': [
+            'As a Yarra Evaluator, I want to review a school\'s Self Study Questionnaire without waiting for it to be emailed to me.',
+            'As a Yarra Evaluator, I want to ask a clarifying question and know the right person at the school will see it.',
+            'As a School Admin, I want to answer an Evaluator\'s question in the same place I manage our review cycle.',
+        ],
+        'acceptance': [
+            'Only a user with a Yarra Evaluator account can access this area; it is not reachable via the normal school-scoped nav.',
+            'A question always notifies the school\'s Leader/Admin, never a broader audience.',
         ],
     },
 ]
@@ -490,10 +527,10 @@ LIFECYCLES = [
         'name': 'Event Management',
         'steps': [
             'Super Admin creates the event',
-            'Every school views and students register (+ pay)',
-            'Staff mark attendance and log results for their own school',
-            'Attended students can download a certificate; staff can export the attendee list as CSV',
-            'Recording link / presentation attached post-event',
+            'Every school views it; School Admin/Teacher registers participants by name (+ pay)',
+            'Staff mark attendance and log results for their own school\'s participants',
+            'Once a participant is marked attended, staff can download their certificate; staff can export the attendee list as CSV',
+            'Recording link, presentation, and photo gallery attached post-event',
             '(Optional) Super Admin deletes -- registrations and results cascade-delete',
         ],
     },
@@ -530,10 +567,20 @@ LIFECYCLES = [
     {
         'name': 'Payment (Event Registration)',
         'steps': [
-            'Student registers for a paid event',
+            'School Admin/Teacher registers a participant for a paid event',
             'Razorpay order created (if configured) or manual proof uploaded',
             'Payment verified or failed',
             'Invoice PDF downloadable once verified',
+        ],
+    },
+    {
+        'name': 'Yarra Evaluator Q&A',
+        'steps': [
+            'Super Admin provisions a Yarra Evaluator account via Django Admin',
+            'Evaluator opens a school\'s Self Study Questionnaire from the Evaluator dashboard',
+            'Evaluator asks a question -- the school\'s Leader/Admin is notified',
+            'School answers with text and/or an attached document, from the School Review page',
+            'Evaluator is notified and sees the answer on the same page',
         ],
     },
 ]
@@ -546,6 +593,7 @@ CHECKLIST = [
     'Delete an event only when certain -- it permanently removes every registration and result tied to it.',
     'Schedule check_membership_expiry to run daily (e.g. PythonAnywhere Tasks tab) so renewal reminders and auto-suspension actually fire.',
     'Use Broadcast Announcement sparingly -- it notifies every matching user immediately, with no undo.',
+    'Provision Yarra Evaluator accounts via Django Admin only -- there is no self-signup or invite flow for this role.',
     'Regenerate this PDF after major module changes by running python scripts/generate_user_manual.py.',
 ]
 
@@ -574,7 +622,7 @@ def build_pdf():
 
     story.append(Paragraph('Yarra Consortium User Manual', styles['Cover']))
     story.append(Paragraph('Role-based operating guide, generated from the live application', styles['CoverSub']))
-    story.append(Paragraph('Covers every module as currently implemented, for Super Admins, School Admins, Teachers, Students, and Vendors.', styles['CoverSub']))
+    story.append(Paragraph('Covers every module as currently implemented, for Super Admins, School Admins, Teachers, Yarra Evaluators, and Vendors.', styles['CoverSub']))
     story.append(Spacer(1, 1 * cm))
     story.append(Paragraph('Regenerate with: python scripts/generate_user_manual.py', styles['Muted']))
     story.append(PageBreak())

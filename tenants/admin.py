@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import (
     School, Profile, ReviewCycle, Notification, DiscussionThread, ThreadReply,
     Invitation, SchoolProfileExtended, SchoolDocument, Payment, ActivityLog,
+    YarraEvaluator, EvaluatorQuery,
 )
 
 @admin.register(School)
@@ -50,8 +51,8 @@ class InvitationAdmin(admin.ModelAdmin):
 
 @admin.register(SchoolProfileExtended)
 class SchoolProfileExtendedAdmin(admin.ModelAdmin):
-    list_display = ('school', 'district', 'curriculum_adopted', 'total_learners', 'updated_at')
-    search_fields = ('school__name', 'district')
+    list_display = ('school', 'curriculum_adopted', 'updated_at')
+    search_fields = ('school__name',)
 
 
 @admin.register(SchoolDocument)
@@ -73,3 +74,16 @@ class ActivityLogAdmin(admin.ModelAdmin):
     list_filter = ('school',)
     search_fields = ('user__username', 'description')
     readonly_fields = ('created_at',)
+
+
+@admin.register(YarraEvaluator)
+class YarraEvaluatorAdmin(admin.ModelAdmin):
+    list_display = ('user', 'created_at')
+    search_fields = ('user__username', 'user__email')
+
+
+@admin.register(EvaluatorQuery)
+class EvaluatorQueryAdmin(admin.ModelAdmin):
+    list_display = ('review_cycle', 'evaluator', 'created_at', 'answered_at')
+    list_filter = ('evaluator',)
+    search_fields = ('question', 'answer', 'review_cycle__school__name')

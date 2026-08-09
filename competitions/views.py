@@ -13,7 +13,7 @@ import razorpay
 from tenants.models import Profile, School, Notification
 from tenants.notifications import create_notification, log_activity
 from tenants.utils import generate_invoice_pdf, generate_certificate_pdf
-from .models import Event, EventCategory, StudentRegistration, PaymentStatus, CompetitionResult
+from .models import Event, EventCategory, StudentRegistration, PaymentStatus, CompetitionResult, EventPhoto
 
 
 # Permission constants following existing tenants pattern
@@ -66,29 +66,6 @@ def event_list(request):
 
 
 @login_required
-def opportunity_list(request):
-    """Browse all active opportunities across the Yarra network."""
-    profile = _get_user_profile(request)
-    if not profile and not request.user.is_superuser:
-        messages.error(request, "Please complete your profile.")
-        return redirect('school_profile')
-
-    # Events are Yarra-wide: every school sees every active opportunity.
-    events = Event.objects.filter(
-        is_active=True,
-        category=EventCategory.OPPORTUNITY
-    ).select_related('school', 'created_by')
-
-    context = {
-        'events': events,
-        'profile': profile,
-        'can_create_event': request.user.is_superuser,
-        'is_opportunity_view': True,
-    }
-    return render(request, 'competitions/opportunity_list.html', context)
-
-
-@login_required
 def event_detail(request, pk):
     """View event details, download brochure, see payment info."""
     profile = _get_user_profile(request)
@@ -102,15 +79,8 @@ def event_detail(request, pk):
         pk=pk
     )
 
-    registration = None
-    if profile and profile.role == 'student':
-        registration = StudentRegistration.objects.filter(
-            event=event, student=request.user
-        ).first()
-
     context = {
         'event': event,
-        'registration': registration,
         'profile': profile,
         'can_edit': request.user.is_superuser,
         'can_manage_participants': request.user.is_superuser or _is_school_staff(profile),
@@ -131,8 +101,8 @@ def event_participants(request, pk):
         messages.error(request, "You don't have permission to view participant records for this event.")
         return redirect('event_list')
 
-    registrations = StudentRegistration.objects.filter(event=event).select_related('student__profile__school')
-    by_school = registrations.values('student__profile__school__name').annotate(count=Count('id')).order_by('-count')
+    registrations = StudentRegistration.objects.filter(event=event).select_related('school')
+    by_school = registrations.values('school__name').annotate(count=Count('id')).order_by('-count')
 
     context = {
         'event': event,
@@ -153,16 +123,16 @@ def export_participants_csv(request, pk):
         messages.error(request, "You don't have permission to export participant records for this event.")
         return redirect('event_list')
 
-    registrations = StudentRegistration.objects.filter(event=event).select_related('student__profile__school')
+    registrations = StudentRegistration.objects.filter(event=event).select_related('school')
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{event.title}_attendees.csv"'
     writer = csv.writer(response)
-    writer.writerow(['Student', 'School', 'Payment Status', 'Attended', 'Registered At'])
+    writer.writerow(['Participant', 'School', 'Payment Status', 'Attended', 'Registered At'])
     for reg in registrations:
         writer.writerow([
-            reg.student.get_full_name() or reg.student.username,
-            reg.student.profile.school.name if hasattr(reg.student, 'profile') else '',
+            reg.display_name,
+            reg.school.name if reg.school else '',
             reg.get_payment_status_display(), reg.attended,
             reg.registered_at.strftime('%Y-%m-%d %H:%M'),
         ])
@@ -208,7 +178,7 @@ def event_create(request):
         return redirect('event_detail', pk=event.pk)
 
     context = {
-        'categories': EventCategory.choices,
+        'categories': [c for c in EventCategory.choices if c[0] != EventCategory.OPPORTUNITY],
         'mode': 'create',
     }
     return render(request, 'competitions/event_form.html', context)
@@ -246,12 +216,16 @@ def event_edit(request, pk):
             event.presentation_file = request.FILES['presentation_file']
 
         event.save()
+
+        for photo in request.FILES.getlist('event_photos'):
+            EventPhoto.objects.create(event=event, image=photo)
+
         messages.success(request, f"Event '{event.title}' updated successfully!")
         return redirect('event_detail', pk=event.pk)
 
     context = {
         'event': event,
-        'categories': EventCategory.choices,
+        'categories': [c for c in EventCategory.choices if c[0] != EventCategory.OPPORTUNITY],
         'mode': 'edit',
     }
     return render(request, 'competitions/event_form.html', context)
@@ -275,25 +249,31 @@ def event_delete(request, pk):
 
 @login_required
 def register_for_event(request, pk):
-    """Handle student registration after Google Form submission."""
+    """School Admin/Teacher registers a participant (by name) for an event on the school's behalf."""
     profile = _get_user_profile(request)
-    if not profile or profile.role != 'student':
-        messages.error(request, "Only students can register for events.")
+    if not (request.user.is_superuser or _is_school_staff(profile)):
+        messages.error(request, "You don't have permission to register participants for events.")
         return redirect('event_list')
 
     event = get_object_or_404(Event, pk=pk, is_active=True)
 
-    existing = StudentRegistration.objects.filter(event=event, student=request.user).first()
-    if existing:
-        messages.info(request, "You are already registered for this event.")
-        return redirect('event_detail', pk=event.pk)
-
     if request.method != 'POST':
         return redirect('event_detail', pk=event.pk)
 
+    participant_name = request.POST.get('participant_name', '').strip()
+    if not participant_name:
+        messages.error(request, "Please provide the participant's name.")
+        return redirect('event_detail', pk=event.pk)
+
+    school = profile.school if profile else None
+    if request.user.is_superuser and request.POST.get('school'):
+        school = School.objects.filter(pk=request.POST.get('school')).first() or school
+
     registration = StudentRegistration.objects.create(
         event=event,
-        student=request.user,
+        school=school,
+        participant_name=participant_name,
+        registered_by=request.user,
         payment_screenshot=request.FILES.get('payment_screenshot'),
     )
 
@@ -301,12 +281,12 @@ def register_for_event(request, pk):
         create_notification(
             recipient=event.created_by,
             title='New event registration',
-            message=f"{request.user.username} submitted registration for {event.title}.",
+            message=f"{participant_name} was registered for {event.title} by {request.user.username}.",
             level='info',
             target_url=event.get_absolute_url() if hasattr(event, 'get_absolute_url') else f"/competitions/{event.pk}/",
             data={'registration_id': registration.pk},
         )
-    log_activity(request.user, f"Registered for event '{event.title}'", school=profile.school, target_url=event.get_absolute_url())
+    log_activity(request.user, f"Registered '{participant_name}' for event '{event.title}'", school=school, target_url=event.get_absolute_url())
 
     fee_in_paise = int(event.fee * 100) # Use event's specific fee
     if settings.RAZORPAY_KEY_ID and settings.RAZORPAY_SECRET:
@@ -357,7 +337,7 @@ def verify_payment(request):
     razorpay_order_id = request.POST.get('razorpay_order_id')
     registration = StudentRegistration.objects.filter(
         razorpay_order_id=razorpay_order_id,
-        student=request.user
+        registered_by=request.user
     ).first()
 
     if not registration:
@@ -382,7 +362,7 @@ def verify_payment(request):
             create_notification(
                 recipient=registration.event.created_by,
                 title='Payment verified',
-                message=f"{registration.student.username} completed payment for {registration.event.title}.",
+                message=f"Payment for {registration.display_name}'s registration to {registration.event.title} was verified.",
                 level='success',
                 target_url=f"/competitions/{registration.event.pk}/",
                 data={'registration_id': registration.pk},
@@ -412,7 +392,7 @@ def sl_analytics(request):
 
     # Events are Yarra-wide now, so "school analytics" means this school's own participation
     # in Yarra events, not events the school owns.
-    school_registrations = StudentRegistration.objects.filter(student__profile__school=school)
+    school_registrations = StudentRegistration.objects.filter(school=school)
 
     events_participated = Event.objects.filter(registrations__in=school_registrations).distinct()
     total_events = events_participated.count()
@@ -476,15 +456,20 @@ def create_competition_result(request, event_pk):
     return redirect('event_detail', pk=event.pk)
 
 
+def _can_manage_registration(request, registration):
+    profile = _get_user_profile(request)
+    return request.user.is_superuser or (
+        _is_school_staff(profile) and profile.school_id == registration.school_id
+    )
+
+
 @login_required
 def registration_confirm(request, pk):
-    profile = _get_user_profile(request)
-    if not profile or profile.role != 'student':
-        messages.error(request, "Only students can view registration confirmations.")
-        return redirect('event_list')
-
     event = get_object_or_404(Event, pk=pk)
-    registration = get_object_or_404(StudentRegistration, event=event, student=request.user)
+    registration = get_object_or_404(StudentRegistration, event=event, registered_by=request.user)
+    if not _can_manage_registration(request, registration):
+        messages.error(request, "You don't have permission to view this registration.")
+        return redirect('event_list')
     return render(request, 'competitions/registration_confirm.html', {
         'event': event,
         'registration': registration,
@@ -493,12 +478,15 @@ def registration_confirm(request, pk):
 
 @login_required
 def download_invoice(request, pk):
-    """View to download the PDF invoice for a registration."""
-    registration = get_object_or_404(StudentRegistration, pk=pk, student=request.user)
+    """View to download the PDF invoice for a registration (staff of the registering school, or Super Admin)."""
+    registration = get_object_or_404(StudentRegistration, pk=pk)
+    if not _can_manage_registration(request, registration):
+        messages.error(request, "You don't have permission to download this invoice.")
+        return redirect('event_detail', pk=registration.event.pk)
     if registration.payment_status != PaymentStatus.VERIFIED:
         messages.error(request, "Invoice is only available for verified payments.")
         return redirect('event_detail', pk=registration.event.pk)
-    
+
     pdf_buffer = generate_invoice_pdf(registration)
     response = HttpResponse(pdf_buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="Invoice_{registration.id}.pdf"'
@@ -507,10 +495,13 @@ def download_invoice(request, pk):
 
 @login_required
 def download_certificate(request, pk):
-    """M6: Download a PDF attendance certificate, once the student has attended the event."""
-    registration = get_object_or_404(StudentRegistration, pk=pk, student=request.user)
+    """M6: Download a PDF attendance certificate, once the participant has attended the event."""
+    registration = get_object_or_404(StudentRegistration, pk=pk)
+    if not _can_manage_registration(request, registration):
+        messages.error(request, "You don't have permission to download this certificate.")
+        return redirect('event_detail', pk=registration.event.pk)
     if not registration.attended:
-        messages.error(request, "A certificate is only available after you've attended the event.")
+        messages.error(request, "A certificate is only available after the participant has attended the event.")
         return redirect('event_detail', pk=registration.event.pk)
 
     if not registration.certificate_issued:
@@ -525,33 +516,32 @@ def download_certificate(request, pk):
 
 @login_required
 def mark_attendance(request, pk):
-    """M6: Mark a student as attended (staff can only mark their own school's students)."""
-    profile = _get_user_profile(request)
+    """M6: Mark a participant as attended (staff can only mark their own school's participants)."""
     registration = get_object_or_404(StudentRegistration, pk=pk)
 
-    student_profile = Profile.objects.filter(user=registration.student).first()
-    is_own_school_staff = _is_school_staff(profile) and student_profile and profile.school_id == student_profile.school_id
-    if not (request.user.is_superuser or is_own_school_staff):
+    if not _can_manage_registration(request, registration):
         messages.error(request, "You don't have permission to mark attendance.")
         return redirect('event_detail', pk=registration.event.pk)
-    
+
     registration.attended = not registration.attended
     registration.save()
-    
+
     status = "attended" if registration.attended else "not attended"
-    messages.success(request, f"Marked {registration.student.username} as {status}.")
+    messages.success(request, f"Marked {registration.display_name} as {status}.")
     return redirect('event_detail', pk=registration.event.pk)
 
 @login_required
 def submit_feedback(request, pk):
-    """M6: Student submits feedback for an event."""
-    profile = _get_user_profile(request)
-    registration = get_object_or_404(StudentRegistration, pk=pk, student=request.user)
-    
+    """M6: Staff records feedback for a participant's event experience."""
+    registration = get_object_or_404(StudentRegistration, pk=pk)
+    if not _can_manage_registration(request, registration):
+        messages.error(request, "You don't have permission to record feedback for this registration.")
+        return redirect('event_detail', pk=registration.event.pk)
+
     if request.method == 'POST':
         rating = request.POST.get('rating')
-        text = request.POST.get('text')
-        
+        text = request.POST.get('text', '')
+
         if rating:
             registration.feedback_rating = int(rating)
             registration.feedback_text = text

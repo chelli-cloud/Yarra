@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import Notification, Profile
+from .models import Notification, Profile, YarraEvaluator
 
 
 def notification_context(request):
@@ -23,7 +23,7 @@ def school_context(request):
 
     profile = Profile.objects.filter(user=request.user).select_related('school').first()
     if not profile:
-        return {}
+        return {'is_yarra_evaluator': YarraEvaluator.objects.filter(user=request.user).exists()}
 
     return {
         'user_profile': profile,

@@ -26,4 +26,7 @@ urlpatterns = [
     path('payments/<int:pk>/invoice/', views.download_payment_invoice, name='download_payment_invoice'),
     path('testing/switch-role/', views.switch_role, name='switch_role'),
     path('testing/return-to-admin/', views.return_to_admin, name='return_to_admin'),
+    path('evaluator/', views.evaluator_dashboard, name='evaluator_dashboard'),
+    path('evaluator/school/<int:school_pk>/', views.evaluator_review_detail, name='evaluator_review_detail'),
+    path('evaluator/query/<int:pk>/answer/', views.evaluator_answer_query, name='evaluator_answer_query'),
 ]

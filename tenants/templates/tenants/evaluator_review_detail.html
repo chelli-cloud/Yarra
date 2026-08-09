@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ school.name }} | Yarra Evaluator{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>{{ school.name }}</h1>
+        <p class="muted">Self Study Questionnaire and evaluator questions.</p>
+    </div>
+    <a href="{% url 'evaluator_dashboard' %}" class="button secondary">Back to Evaluator Dashboard</a>
+</div>
+
+{% if not review_cycle %}
+    <div class="card">
+        <p>This school has not started a review cycle yet.</p>
+    </div>
+{% else %}
+    <div class="card" style="margin-bottom: 24px;">
+        <h2>Self Study Questionnaire</h2>
+        <p><span class="badge {% if review_cycle.self_study_status == 'completed' %}success{% elif review_cycle.self_study_status == 'in_progress' %}warning{% else %}info{% endif %}">{{ review_cycle.get_self_study_status_display }}</span></p>
+        {% if review_cycle.self_study_document %}
+            <p style="margin-top: 12px;"><a href="{{ review_cycle.self_study_document.url }}" class="button secondary">View Self Study Document</a></p>
+        {% else %}
+            <p class="muted">No document uploaded yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>Ask a Question</h2>
+        <p class="muted">The School Admin will be notified and can respond here.</p>
+        <form method="post">
+            {% csrf_token %}
+            <textarea name="question" rows="3" placeholder="Your question" required></textarea>
+            <button type="submit" class="button" style="margin-top: 10px;">Send Question</button>
+        </form>
+    </div>
+
+    {% if queries %}
+    <div class="card" style="margin-top: 24px;">
+        <h2 style="margin-bottom: 16px;">Question History</h2>
+        {% for query in queries %}
+        <div style="padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 16px;">
+            <p><strong>Q:</strong> {{ query.question }}</p>
+            <p class="muted" style="font-size: 0.8rem;">Asked {{ query.created_at|date:"M d, Y H:i" }}</p>
+            {% if query.answer or query.response_document %}
+                <p style="margin-top: 12px;"><strong>A:</strong> {{ query.answer|default:"(no text, see attached document)" }}</p>
+                {% if query.response_document %}
+                    <p><a href="{{ query.response_document.url }}">View attached document</a></p>
+                {% endif %}
+            {% else %}
+                <p class="muted">Awaiting a response.</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

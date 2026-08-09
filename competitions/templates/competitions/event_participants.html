@@ -22,7 +22,7 @@
             <tbody>
                 {% for row in by_school %}
                 <tr>
-                    <td>{{ row.student__profile__school__name }}</td>
+                    <td>{{ row.school__name|default:"—" }}</td>
                     <td>{{ row.count }}</td>
                 </tr>
                 {% empty %}
@@ -37,12 +37,12 @@
     <h2 style="margin-bottom: 16px;">All Registrations</h2>
     <div class="table-container">
         <table>
-            <thead><tr><th>Student</th><th>School</th><th>Payment Status</th><th>Attended</th></tr></thead>
+            <thead><tr><th>Participant</th><th>School</th><th>Payment Status</th><th>Attended</th></tr></thead>
             <tbody>
                 {% for reg in registrations %}
                 <tr>
-                    <td>{{ reg.student.get_full_name|default:reg.student.username }}</td>
-                    <td>{{ reg.student.profile.school.name }}</td>
+                    <td>{{ reg.display_name }}</td>
+                    <td>{{ reg.school.name|default:"—" }}</td>
                     <td><span class="badge {% if reg.payment_status == 'verified' %}success{% elif reg.payment_status == 'failed' %}error{% else %}warning{% endif %}">{{ reg.get_payment_status_display }}</span></td>
                     <td>{% if reg.attended %}Yes{% else %}No{% endif %}</td>
                 </tr>

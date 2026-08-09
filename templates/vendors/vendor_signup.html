@@ -2,94 +2,17 @@
 
 {% block title %}Vendor Registration | Yarra{% endblock %}
 
-{% block content %}
-<div class="page" style="max-width: 800px; margin: 0 auto;">
-    <div class="page-header text-center">
-        <div>
-            <h1>Partner with Yarra</h1>
-            <p class="muted">Join our curated marketplace and reach hundreds of schools across the consortium.</p>
-        </div>
+{% block content %}{% include 'vendors/_vendor_signup_form.html' %}{% endblock %}
+
+{% block guest_content %}
+<div style="min-height: 100vh; padding: 40px 20px; background: linear-gradient(135deg, #F3FAF9 0%, #E3F5F3 100%);">
+    {% if messages %}
+    <div class="messages" style="max-width: 800px; margin: 0 auto 24px;">
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
     </div>
-
-    <div class="card p-5">
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <div class="grid two">
-                <div class="form-group">
-                    <label class="label">Vendor Name *</label>
-                    {{ form.name }}
-                    {% if form.name.errors %}<div class="error">{{ form.name.errors.0 }}</div>{% endif %}
-                </div>
-                <div class="form-group">
-                    <label class="label">Category *</label>
-                    {{ form.category }}
-                    {% if form.category.errors %}<div class="error">{{ form.category.errors.0 }}</div>{% endif %}
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="label">Description *</label>
-                {{ form.description }}
-                <small class="muted">Briefly describe your services and expertise.</small>
-                {% if form.description.errors %}<div class="error">{{ form.description.errors.0 }}</div>{% endif %}
-            </div>
-
-            <div class="grid two">
-                <div class="form-group">
-                    <label class="label">Contact Email *</label>
-                    {{ form.contact_email }}
-                    {% if form.contact_email.errors %}<div class="error">{{ form.contact_email.errors.0 }}</div>{% endif %}
-                </div>
-                <div class="form-group">
-                    <label class="label">Contact Phone</label>
-                    {{ form.contact_phone }}
-                    {% if form.contact_phone.errors %}<div class="error">{{ form.contact_phone.errors.0 }}</div>{% endif %}
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="label">Website URL</label>
-                {{ form.website }}
-                {% if form.website.errors %}<div class="error">{{ form.website.errors.0 }}</div>{% endif %}
-            </div>
-
-            <div class="form-group">
-                <label class="label">Company Logo</label>
-                {{ form.logo }}
-                <small class="muted">Square logo (PNG or JPG) works best.</small>
-                {% if form.logo.errors %}<div class="error">{{ form.logo.errors.0 }}</div>{% endif %}
-            </div>
-
-            <div class="grid two">
-                <div class="form-group">
-                    <label class="label">Brochure</label>
-                    {{ form.brochure }}
-                    {% if form.brochure.errors %}<div class="error">{{ form.brochure.errors.0 }}</div>{% endif %}
-                </div>
-                <div class="form-group">
-                    <label class="label">Catalog</label>
-                    {{ form.catalog }}
-                    {% if form.catalog.errors %}<div class="error">{{ form.catalog.errors.0 }}</div>{% endif %}
-                </div>
-            </div>
-
-            <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 32px; display: flex; justify-content: flex-end; gap: 16px;">
-                <a href="{% url 'vendor_list' %}" class="button secondary">Cancel</a>
-                <button type="submit" class="button primary">Submit for Approval</button>
-            </div>
-        </form>
-    </div>
+    {% endif %}
+    {% include 'vendors/_vendor_signup_form.html' %}
 </div>
-
-<style>
-    .form-group input, .form-group select, .form-group textarea {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        font-size: 1rem;
-    }
-    .error { color: var(--error); font-size: 0.85rem; margin-top: 4px; }
-</style>
 {% endblock %}

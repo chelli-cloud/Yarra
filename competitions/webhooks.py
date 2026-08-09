@@ -67,7 +67,7 @@ def razorpay_webhook(request):
                         create_notification(
                             recipient=registration.event.created_by,
                             title='Payment verified',
-                            message=f"Payment verified for {registration.student.username} in {registration.event.title}.",
+                            message=f"Payment verified for {registration.display_name} in {registration.event.title}.",
                             level='info',
                             target_url=registration.event.get_absolute_url(),
                             data={

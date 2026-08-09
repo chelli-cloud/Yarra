@@ -457,6 +457,12 @@
             </div>
             
             <nav class="sidebar-nav">
+                {% if is_yarra_evaluator %}
+                <a href="{% url 'evaluator_dashboard' %}" class="nav-link">
+                    <span class="nav-icon">🧑‍🏫</span> Yarra Evaluator
+                </a>
+                {% endif %}
+                {% if user_profile or request.user.is_superuser %}
                 <a href="{% url 'school_profile' %}" class="nav-link">
                     <span class="nav-icon">🏫</span> School Profile
                 </a>
@@ -466,10 +472,7 @@
                     </a>
                 {% endif %}
                 <a href="{% url 'event_list' %}" class="nav-link">
-                    <span class="nav-icon">🏆</span> Competitions
-                </a>
-                <a href="{% url 'opportunity_list' %}" class="nav-link">
-                    <span class="nav-icon">💡</span> Opportunities
+                    <span class="nav-icon">🏆</span> Events
                 </a>
                 <a href="{% url 'school_network' %}" class="nav-link">
                     <span class="nav-icon">🌐</span> School Network
@@ -515,6 +518,7 @@
                         <span class="nav-icon">✅</span> Content Review
                     </a>
                 {% endif %}
+                {% endif %}
             </nav>
 
             <div class="sidebar-footer">
@@ -553,7 +557,6 @@
                             <option value="admin">Admin</option>
                             <option value="pl_teacher">PL Teacher</option>
                             <option value="teacher">Teacher</option>
-                            <option value="student">Student</option>
                         </select>
                     </form>
                     {% endif %}

@@ -9,7 +9,6 @@ ROLE_LABELS = [
     ('admin', 'Admin'),
     ('pl_teacher', 'PL Teacher'),
     ('teacher', 'Teacher'),
-    ('student', 'Student'),
 ]
 
 
