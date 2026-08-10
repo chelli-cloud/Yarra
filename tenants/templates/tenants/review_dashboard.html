@@ -89,18 +89,16 @@
 
     <div class="card">
         <h2 style="margin-bottom: 24px;">Review Details</h2>
-        
+
+        {% include 'tenants/_self_evaluation_purpose.html' %}
+
         {% if is_archived_selection %}
             <div class="message info" style="margin-bottom: 32px;">
                 <span>ℹ️</span> Archived cycles are view-only so historical records stay unchanged.
             </div>
         {% elif can_edit_review %}
             <p class="muted" style="margin-bottom: 32px;">
-                {% if user.profile.role == 'pl_teacher' %}
-                    You can update review progress as a PL Teacher.
-                {% else %}
-                    You can update the active review cycle.
-                {% endif %}
+                You can update the active review cycle.
             </p>
         {% endif %}
 
@@ -111,6 +109,10 @@
             <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
                 <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Self Study Details</div>
                 <div style="padding: 32px;">
+                    <div class="message info" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+                        <span>📋 Fill out the Self-Evaluation Record on Google Forms (see Purpose &amp; Guidelines above), then upload a copy of your responses below so your Yarra Evaluator can review it here.</span>
+                        <a href="{{ self_study_questionnaire_url }}" target="_blank" rel="noopener" class="button secondary">Open Self Study Questionnaire</a>
+                    </div>
                     <div class="grid two">
                         <div class="form-group">
                             <label class="label">Current Status</label>
@@ -129,7 +131,7 @@
                             <input class="input" type="date" name="self_study_end" value="{{ review_cycle.self_study_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
                         </div>
                         <div class="form-group">
-                            <label class="label">Upload Supporting Document</label>
+                            <label class="label">Upload Completed Questionnaire</label>
                             <input type="file" name="self_study_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="width: 100%;">
                         </div>
                     </div>

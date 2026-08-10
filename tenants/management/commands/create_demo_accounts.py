@@ -7,7 +7,6 @@ DEMO_PASSWORD = 'test@1234'
 ROLE_LABELS = [
     ('school_leader', 'School Leader'),
     ('admin', 'Admin'),
-    ('pl_teacher', 'PL Teacher'),
     ('teacher', 'Teacher'),
 ]
 

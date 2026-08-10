@@ -17,6 +17,7 @@ from .forms import (
 )
 from .notifications import log_activity, create_notification
 from django.utils import timezone
+from django.conf import settings
 import secrets
 
 REVIEW_STATUS_DISPLAY = {
@@ -27,7 +28,7 @@ REVIEW_STATUS_DISPLAY = {
 
 PROFILE_EDIT_ROLES = ['school_leader', 'admin']
 REVIEW_CYCLE_CREATE_ROLES = ['school_leader', 'admin']
-REVIEW_EDIT_ROLES = ['school_leader', 'admin', 'pl_teacher']
+REVIEW_EDIT_ROLES = ['school_leader', 'admin']
 LEADERSHIP_ROLES = ['school_leader', 'admin']
 MAX_ADMINS_PER_SCHOOL = 2
 MAX_TEACHERS_PER_SCHOOL = 5
@@ -253,6 +254,7 @@ def review_dashboard(request):
         'review_status_choices': ReviewCycle._meta.get_field('self_study_status').choices,
         'evaluator_queries': evaluator_queries,
         'can_answer_queries': profile.role in PROFILE_EDIT_ROLES,
+        'self_study_questionnaire_url': settings.SELF_STUDY_QUESTIONNAIRE_URL,
     })
 
 
@@ -311,6 +313,7 @@ def evaluator_review_detail(request, school_pk):
         'school': school,
         'review_cycle': review_cycle,
         'queries': queries,
+        'self_study_questionnaire_url': settings.SELF_STUDY_QUESTIONNAIRE_URL,
     })
 
 

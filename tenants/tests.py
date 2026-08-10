@@ -17,9 +17,6 @@ class ReviewDashboardTests(TestCase):
         self.leader = User.objects.create_user(username='leader', password='test@1234')
         Profile.objects.create(user=self.leader, school=self.school, role='school_leader')
 
-        self.pl_teacher = User.objects.create_user(username='plteacher', password='test@1234')
-        Profile.objects.create(user=self.pl_teacher, school=self.school, role='pl_teacher')
-
         self.teacher = User.objects.create_user(username='teacher', password='test@1234')
         Profile.objects.create(user=self.teacher, school=self.school, role='teacher')
 
@@ -61,34 +58,6 @@ class ReviewDashboardTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(ReviewCycle.objects.filter(school=self.school, title='2027 Review Cycle').exists())
-
-    def test_pl_teacher_can_edit_active_review_cycle(self):
-        self.client.login(username='plteacher', password='test@1234')
-        response = self.client.post(reverse('review_dashboard'), {
-            'self_study_status': 'completed',
-            'self_study_start': '2026-01-10',
-            'self_study_end': '2026-02-10',
-            'review_visit_status': self.active_cycle.review_visit_status,
-            'review_visit_start': '',
-            'review_visit_end': '',
-            'sip_status': self.active_cycle.sip_status,
-            'sip_start': '',
-            'sip_end': '',
-            'recommendations_status': self.active_cycle.recommendations_status,
-            'recommendations_start': '',
-            'recommendations_end': '',
-        })
-
-        self.assertEqual(response.status_code, 302)
-        self.active_cycle.refresh_from_db()
-        self.assertEqual(self.active_cycle.self_study_status, 'completed')
-
-    def test_pl_teacher_cannot_create_review_cycle(self):
-        self.client.login(username='plteacher', password='test@1234')
-        response = self.client.get(reverse('create_review_cycle'))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Only School Leaders and Admins can create new review cycles.')
 
     def test_archive_list_shows_past_cycles(self):
         self.client.login(username='leader', password='test@1234')

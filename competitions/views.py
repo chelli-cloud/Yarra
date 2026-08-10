@@ -20,7 +20,7 @@ from .models import Event, EventCategory, StudentRegistration, PaymentStatus, Co
 SL_ANALYTICS_ROLES = ['school_leader']
 
 
-STAFF_ROLES = ['admin', 'school_leader', 'teacher', 'pl_teacher']
+STAFF_ROLES = ['admin', 'school_leader', 'teacher']
 
 
 def _get_user_profile(request):

@@ -8,8 +8,8 @@ from tenants.models import School, Profile, DiscussionThread, ThreadReply
 from competitions.models import Event, EventCategory, CompetitionResult
 
 SEED_USERNAME_PATTERN = re.compile(r'^(school_leader|admin|pl_teacher|teacher|student)_\d+$')
-# NOTE: 'student' stays in the pattern (not the roles list below) so reruns still clean up
-# any leftover student_<id> accounts created before self-service student login was removed.
+# NOTE: 'student' and 'pl_teacher' stay in the pattern (not the roles list below) so reruns
+# still clean up any leftover accounts from before those roles were removed.
 
 class Command(BaseCommand):
     help = 'Seed the database with 10 schools and comprehensive sample data'
@@ -43,7 +43,7 @@ class Command(BaseCommand):
             ("St. Paul's School", "Darjeeling, WB", "Classic Education, Choir, Nature"),
         ]
 
-        roles = ['school_leader', 'admin', 'pl_teacher', 'teacher']
+        roles = ['school_leader', 'admin', 'teacher']
         
         for name, loc, offerings in schools_data:
             school = School.objects.create(
@@ -128,5 +128,5 @@ class Command(BaseCommand):
         self.stdout.write('\n--- LOGIN DETAILS ---')
         self.stdout.write('Password for all users: test@1234')
         self.stdout.write('\nFormat: [role]_[school_id]')
-        self.stdout.write('Roles: school_leader, admin, pl_teacher, teacher')
+        self.stdout.write('Roles: school_leader, admin, teacher')
         self.stdout.write('Example: teacher_1 (School 1), admin_2 (School 2), etc.')

@@ -11,6 +11,8 @@
     <a href="{% url 'evaluator_dashboard' %}" class="button secondary">Back to Evaluator Dashboard</a>
 </div>
 
+{% include 'tenants/_self_evaluation_purpose.html' %}
+
 {% if not review_cycle %}
     <div class="card">
         <p>This school has not started a review cycle yet.</p>
@@ -19,6 +21,7 @@
     <div class="card" style="margin-bottom: 24px;">
         <h2>Self Study Questionnaire</h2>
         <p><span class="badge {% if review_cycle.self_study_status == 'completed' %}success{% elif review_cycle.self_study_status == 'in_progress' %}warning{% else %}info{% endif %}">{{ review_cycle.get_self_study_status_display }}</span></p>
+        <p class="muted" style="margin-top: 8px;"><a href="{{ self_study_questionnaire_url }}" target="_blank" rel="noopener">View the official Self Study Questionnaire (Google Form)</a></p>
         {% if review_cycle.self_study_document %}
             <p style="margin-top: 12px;"><a href="{{ review_cycle.self_study_document.url }}" class="button secondary">View Self Study Document</a></p>
         {% else %}

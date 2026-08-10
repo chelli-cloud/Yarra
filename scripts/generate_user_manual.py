@@ -72,7 +72,7 @@ ROLE_MATRIX = [
     ['Vendor Marketplace', 'Approve promotions', 'Enquire / request', 'Enquire / request', 'No', 'Managed via Admin'],
     ['Vendor Event Interest', 'Notified', 'No', 'No', 'No', 'Applies'],
     ['School Network', 'View', 'View & contact', 'View only', 'No', 'No'],
-    ['School Review', 'View', 'Edit (Leader/Admin/PL Teacher)', 'View', 'View Self Study + ask questions', 'No'],
+    ['School Review', 'View', 'Edit (Leader/Admin)', 'View', 'View Self Study + ask questions', 'No'],
     ['Leadership Connect', 'No', 'Yes (Leader/Admin only)', 'No', 'No', 'No'],
     ['Notifications & Activity', 'Sees all activity', 'Own', 'Own', 'Own', 'No'],
     ['Consortium Analytics', 'Yes (direct URL)', 'No', 'No', 'No', 'No'],
@@ -410,7 +410,7 @@ MODULES = [
     {
         'name': '15. School Review',
         'purpose': 'Track a school\'s self-study, review visit, School Improvement Plan, and recommendations cycle.',
-        'roles': 'School Leader, Admin, PL Teacher (edit). All staff (view). Yarra Evaluator (view Self Study + ask questions, see Module 20).',
+        'roles': 'School Leader, Admin (edit). All staff (view). Yarra Evaluator (view Self Study + ask questions, see Module 20).',
         'workflow': [
             'Create a review cycle.',
             'Update status, dates, and a supporting document for each of the four stages.',
@@ -418,7 +418,7 @@ MODULES = [
             'Browse previously archived cycles.',
         ],
         'stories': [
-            'As a PL Teacher, I want to log our self-study progress and attach the supporting document.',
+            'As a School Leader, I want to log our self-study progress and attach the supporting document.',
             'As a School Admin, I want to see and answer a Yarra Evaluator\'s question right here, without a separate email thread.',
         ],
         'acceptance': [
@@ -475,7 +475,7 @@ MODULES = [
         'purpose': 'Let the Super Admin click through the app exactly as another role sees it, for testing and support -- without a second login.',
         'roles': 'Super Admin only.',
         'workflow': [
-            'A "Preview as role" dropdown in the top bar (visible only to a real Super Admin, or someone already mid-preview) lists School Leader, Admin, PL Teacher, and Teacher.',
+            'A "Preview as role" dropdown in the top bar (visible only to a real Super Admin, or someone already mid-preview) lists School Leader, Admin, and Teacher.',
             'Selecting a role logs the Super Admin in as a representative account of that role.',
             'A persistent banner shows who is being previewed, with a one-click "Return to Super Admin".',
         ],
