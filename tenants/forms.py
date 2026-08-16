@@ -1,7 +1,7 @@
 from django import apps
 from django import forms
 from django.contrib.auth.models import User
-from .models import School, Profile, Invitation, SchoolProfileExtended, Payment, GRADE_LEVELS
+from .models import School, Profile, Invitation, SchoolProfileExtended, Payment, GRADE_LEVELS, GRADE_LEVEL_CHOICES
 
 class SchoolRegistrationForm(forms.ModelForm):
     admin_email = forms.EmailField(label="Admin Email")
@@ -29,6 +29,11 @@ class SchoolProfileExtendedForm(forms.ModelForm):
     """Adds one required student-count field per grade level (Pre KG through Grade 12,
     stored as SchoolProfileExtended.grade_strength) and validates the Mixed/Other
     curriculum 'specify' field, on top of the plain model fields."""
+
+    grades_offered = forms.MultipleChoiceField(
+        label='Grades offered', choices=GRADE_LEVEL_CHOICES, required=False,
+        widget=forms.CheckboxSelectMultiple,
+    )
 
     class Meta:
         model = SchoolProfileExtended

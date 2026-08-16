@@ -35,6 +35,8 @@ GRADE_LEVELS = [
     'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12',
 ]
 
+GRADE_LEVEL_CHOICES = [(level.lower().replace(' ', '_'), level) for level in GRADE_LEVELS]
+
 class School(models.Model):
     MEMBERSHIP_TIERS = [
         ('free', 'Free'),
@@ -93,7 +95,7 @@ class SchoolProfileExtended(models.Model):
     address_line2 = models.CharField(max_length=255, blank=True, verbose_name="Address Line 2")
     pincode = models.CharField(max_length=10, blank=True)
     association = models.CharField(max_length=200, blank=True, help_text="Association the school is a part of")
-    grades_offered = models.CharField(max_length=200, blank=True)
+    grades_offered = models.JSONField(default=list, blank=True, help_text="Grade levels the school offers, Pre KG through Grade 12")
     grade_strength = models.JSONField(default=dict, blank=True, help_text="Number of students per grade, Pre KG through Grade 12")
     parent_demographics = models.TextField(blank=True)
     fee_structure_min = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Fee Structure (From)")
