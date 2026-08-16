@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Self-Evaluation Record | {{ school.name }} | Yarra{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Yarra School Self-Evaluation Record</h1>
+        <p class="muted">{{ school.name }} · {{ review_cycle.title }}</p>
+    </div>
+    <a href="{% url 'review_dashboard' %}" class="button secondary">Back to School Review</a>
+</div>
+
+{% include 'tenants/_self_evaluation_purpose.html' %}
+
+<div class="message info" style="margin-bottom: 24px;">
+    <span>💾</span> You can save partial progress at any time and come back to finish later. Fields marked * are part of the official record.
+</div>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% include 'tenants/_self_evaluation_questions.html' %}
+
+    <div style="display: flex; justify-content: flex-end; position: sticky; bottom: 32px; z-index: 10;">
+        <button type="submit" class="button primary" style="padding: 16px 48px; box-shadow: var(--shadow-lg);">Save Self-Evaluation Record</button>
+    </div>
+</form>
+{% endblock %}

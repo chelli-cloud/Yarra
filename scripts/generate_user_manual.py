@@ -414,6 +414,7 @@ MODULES = [
         'workflow': [
             'Create a review cycle.',
             'Update status, dates, and a supporting document for each of the four stages.',
+            'School Leader/Admin fills out the full Yarra School Self-Evaluation Record in-app (see Module 21) -- not available to Teachers.',
             'Any open Yarra Evaluator questions about the Self Study Questionnaire appear on this page for School Leader/Admin to answer.',
             'Browse previously archived cycles.',
         ],
@@ -507,6 +508,25 @@ MODULES = [
         'acceptance': [
             'Only a user with a Yarra Evaluator account can access this area; it is not reachable via the normal school-scoped nav.',
             'A question always notifies the school\'s Leader/Admin, never a broader audience.',
+        ],
+    },
+    {
+        'name': '21. Yarra School Self-Evaluation Record',
+        'purpose': 'Reproduce Ms Chelli\'s official Self-Evaluation Record in-app -- ~170 questions across School Profile & Data, Institutional Capability Review (5 capability areas), Supporting Evidence, and School Priorities -- so a school\'s answers are visible to their Yarra Evaluator without a separate document.',
+        'roles': 'School Leader, Admin (fill out). Yarra Evaluator (view, read-only). Not available to Teachers.',
+        'workflow': [
+            'Open Self-Evaluation Record from the School Review page.',
+            'Answer questions grouped by Part -> Section -> Sub-area, matching the original form exactly: short answer, paragraph, single/multi-choice, 1-4 ratings, and evidence file uploads.',
+            'Save at any time -- partial progress is kept and the form reopens pre-filled.',
+            'The Yarra Evaluator sees the same record read-only (with any uploaded evidence files) from their school view.',
+        ],
+        'stories': [
+            'As a School Admin, I want to fill out our Self-Evaluation Record over several sessions without losing progress.',
+            'As a Yarra Evaluator, I want to see a school\'s full self-evaluation answers and evidence in one place.',
+        ],
+        'acceptance': [
+            'Teachers cannot open this page even by URL -- only School Leader/Admin.',
+            'The question set lives in one file (tenants/self_evaluation.py) so it can be updated without touching the view or template.',
         ],
     },
 ]

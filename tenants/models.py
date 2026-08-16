@@ -241,6 +241,33 @@ class ReviewCycle(models.Model):
         return f"{self.school.name} - {self.title}"
 
 
+class SelfEvaluationResponse(models.Model):
+    """Stores answers to the Yarra School Self-Evaluation Record (see
+    tenants/self_evaluation.py for the question schema) as {question_id: value}.
+    File-upload questions are stored separately in SelfEvaluationFile."""
+    review_cycle = models.OneToOneField(ReviewCycle, on_delete=models.CASCADE, related_name='self_evaluation')
+    data = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f"Self-Evaluation Record - {self.review_cycle.school.name}"
+
+
+class SelfEvaluationFile(models.Model):
+    """One uploaded file per file-type question in the Self-Evaluation Record."""
+    review_cycle = models.ForeignKey(ReviewCycle, on_delete=models.CASCADE, related_name='self_evaluation_files')
+    question_id = models.CharField(max_length=40)
+    file = models.FileField(upload_to='review_documents/self_evaluation/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('review_cycle', 'question_id')
+
+    def __str__(self):
+        return f"{self.review_cycle.school.name} - {self.question_id}"
+
+
 class YarraEvaluator(models.Model):
     """Marks a user as a Yarra Evaluator: cross-school read access to Self Study
     Questionnaires plus the ability to ask a School Admin follow-up questions.

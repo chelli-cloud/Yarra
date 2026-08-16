@@ -40,7 +40,7 @@
     </div>
 
     {% if queries %}
-    <div class="card" style="margin-top: 24px;">
+    <div class="card" style="margin-top: 24px; margin-bottom: 24px;">
         <h2 style="margin-bottom: 16px;">Question History</h2>
         {% for query in queries %}
         <div style="padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 16px;">
@@ -58,5 +58,14 @@
         {% endfor %}
     </div>
     {% endif %}
+
+    <details style="margin-bottom: 24px;">
+        <summary style="cursor: pointer; padding: 14px 20px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius-md); font-weight: 700; color: var(--primary);">
+            📄 View Full Self-Evaluation Record
+        </summary>
+        <div style="margin-top: 16px;">
+            {% include 'tenants/_self_evaluation_questions.html' %}
+        </div>
+    </details>
 {% endif %}
 {% endblock %}

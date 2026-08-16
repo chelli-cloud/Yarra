@@ -1,0 +1,78 @@
+{% load tenants_extras %}
+{% for part in parts %}
+<div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
+    <div style="padding: 16px 24px; background: var(--primary); color: white; font-weight: 700; font-size: 0.95rem;">{{ part.title }}</div>
+    <div style="padding: 24px 32px;">
+        {% for section in part.sections %}
+            <h3 style="margin: 20px 0 12px; color: var(--primary-dark);">{{ section.title }}</h3>
+            {% for subsection in section.subsections %}
+                {% if subsection.title %}
+                    <h4 style="margin: 16px 0 8px; font-size: 0.95rem; color: var(--text-main);">{{ subsection.title }}</h4>
+                {% endif %}
+                {% for q in subsection.questions %}
+                    <div class="form-group" style="margin-bottom: 18px;">
+                        <label class="label">{{ q.label }}{% if q.required %} *{% endif %}</label>
+
+                        {% if q.type == 'text' %}
+                            <input class="input" type="text" name="{{ q.id }}" value="{{ response_data|get_item:q.id|default:'' }}" {% if read_only %}readonly{% endif %}>
+
+                        {% elif q.type == 'textarea' %}
+                            <textarea class="input" name="{{ q.id }}" rows="3" {% if read_only %}readonly{% endif %}>{{ response_data|get_item:q.id|default:'' }}</textarea>
+
+                        {% elif q.type == 'radio' %}
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 4px;">
+                                {% with selected=response_data|get_item:q.id %}
+                                {% for val, choice_label in q.choices %}
+                                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 400;">
+                                        <input type="radio" name="{{ q.id }}" value="{{ val }}" {% if selected == val %}checked{% endif %} {% if read_only %}disabled{% endif %}>
+                                        {{ choice_label }}
+                                    </label>
+                                {% endfor %}
+                                {% endwith %}
+                            </div>
+
+                        {% elif q.type == 'checkbox' %}
+                            <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px;">
+                                {% with selected=response_data|get_item:q.id %}
+                                {% for val, choice_label in q.choices %}
+                                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 400;">
+                                        <input type="checkbox" name="{{ q.id }}" value="{{ val }}" {% if val in selected %}checked{% endif %} {% if read_only %}disabled{% endif %}>
+                                        {{ choice_label }}
+                                    </label>
+                                {% endfor %}
+                                {% endwith %}
+                            </div>
+
+                        {% elif q.type == 'scale' %}
+                            <div style="display: flex; align-items: center; gap: 18px; margin-top: 4px; flex-wrap: wrap;">
+                                <span class="muted" style="font-size: 0.8rem;">{{ q.scale_labels.0 }}</span>
+                                {% with selected=response_data|get_item:q.id %}
+                                {% for n in "1234" %}
+                                    <label style="display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 400;">
+                                        <input type="radio" name="{{ q.id }}" value="{{ n }}" {% if selected == n %}checked{% endif %} {% if read_only %}disabled{% endif %}>
+                                        <span style="font-size: 0.75rem;">{{ n }}</span>
+                                    </label>
+                                {% endfor %}
+                                {% endwith %}
+                                <span class="muted" style="font-size: 0.8rem;">{{ q.scale_labels.1 }}</span>
+                            </div>
+
+                        {% elif q.type == 'file' %}
+                            {% with existing=existing_files|get_item:q.id %}
+                            {% if existing %}
+                                <p style="margin-bottom: 6px;"><a href="{{ existing.file.url }}" target="_blank" rel="noopener">View uploaded file</a></p>
+                            {% elif read_only %}
+                                <p class="muted" style="margin-bottom: 6px;">No file uploaded.</p>
+                            {% endif %}
+                            {% if not read_only %}
+                                <input type="file" name="{{ q.id }}">
+                            {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}

@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     School, Profile, ReviewCycle, Notification, DiscussionThread, ThreadReply,
     Invitation, SchoolProfileExtended, SchoolDocument, Payment, ActivityLog,
-    YarraEvaluator, EvaluatorQuery,
+    YarraEvaluator, EvaluatorQuery, SelfEvaluationResponse, SelfEvaluationFile,
 )
 
 @admin.register(School)
@@ -87,3 +87,16 @@ class EvaluatorQueryAdmin(admin.ModelAdmin):
     list_display = ('review_cycle', 'evaluator', 'created_at', 'answered_at')
     list_filter = ('evaluator',)
     search_fields = ('question', 'answer', 'review_cycle__school__name')
+
+
+@admin.register(SelfEvaluationResponse)
+class SelfEvaluationResponseAdmin(admin.ModelAdmin):
+    list_display = ('review_cycle', 'updated_by', 'updated_at')
+    search_fields = ('review_cycle__school__name',)
+
+
+@admin.register(SelfEvaluationFile)
+class SelfEvaluationFileAdmin(admin.ModelAdmin):
+    list_display = ('review_cycle', 'question_id', 'uploaded_at')
+    list_filter = ('question_id',)
+    search_fields = ('review_cycle__school__name', 'question_id')

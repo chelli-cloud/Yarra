@@ -9,8 +9,9 @@ from django.http import HttpResponse
 from .models import (
     School, Profile, ReviewCycle, DiscussionThread, ThreadReply,
     Notification, Invitation, SchoolProfileExtended, SchoolDocument, Payment, ActivityLog,
-    YarraEvaluator, EvaluatorQuery,
+    YarraEvaluator, EvaluatorQuery, SelfEvaluationResponse, SelfEvaluationFile,
 )
+from .self_evaluation import QUESTIONS, grouped_questions
 from .forms import (
     InvitationForm, SchoolRegistrationForm, UserRegistrationForm,
     SchoolCreateForm, SchoolProfileExtendedForm, PaymentForm,
@@ -308,12 +309,18 @@ def evaluator_review_detail(request, school_pk):
         return redirect('evaluator_review_detail', school_pk=school.pk)
 
     queries = EvaluatorQuery.objects.filter(review_cycle=review_cycle) if review_cycle else []
+    response = SelfEvaluationResponse.objects.filter(review_cycle=review_cycle).first() if review_cycle else None
+    existing_files = {f.question_id: f for f in SelfEvaluationFile.objects.filter(review_cycle=review_cycle)} if review_cycle else {}
 
     return render(request, 'tenants/evaluator_review_detail.html', {
         'school': school,
         'review_cycle': review_cycle,
         'queries': queries,
         'self_study_questionnaire_url': settings.SELF_STUDY_QUESTIONNAIRE_URL,
+        'parts': grouped_questions() if review_cycle else [],
+        'response_data': response.data if response else {},
+        'existing_files': existing_files,
+        'read_only': True,
     })
 
 
@@ -620,6 +627,59 @@ def create_review_cycle(request):
         )
         return redirect(f"{reverse('review_dashboard')}?cycle_id={review_cycle.pk}")
     return render(request, 'tenants/review_cycle_form.html', {'school': profile.school})
+
+
+@login_required
+def self_evaluation_form(request):
+    """Fill out the Yarra School Self-Evaluation Record for the school's active review
+    cycle. Restricted to School Leader/Admin -- explicitly not available to Teachers,
+    per Ms Chelli's instruction that this content is more sensitive than the general
+    review-cycle status tracking on the School Review page."""
+    profile = get_object_or_404(Profile, user=request.user)
+    if profile.role not in REVIEW_EDIT_ROLES:
+        return render(request, 'tenants/access_denied.html', {
+            'message': 'The Self-Evaluation Record is only available to School Leaders and Admins.'
+        }, status=403)
+
+    school = profile.school
+    review_cycle = ReviewCycle.objects.filter(school=school).order_by('-created_at').first()
+    if not review_cycle:
+        messages.error(request, "Create a review cycle before starting the Self-Evaluation Record.")
+        return redirect('review_dashboard')
+
+    response, _ = SelfEvaluationResponse.objects.get_or_create(review_cycle=review_cycle)
+
+    if request.method == 'POST':
+        data = dict(response.data)
+        for q in QUESTIONS:
+            qid = q['id']
+            if q['type'] == 'checkbox':
+                data[qid] = request.POST.getlist(qid)
+            elif q['type'] == 'file':
+                if request.FILES.get(qid):
+                    SelfEvaluationFile.objects.update_or_create(
+                        review_cycle=review_cycle, question_id=qid,
+                        defaults={'file': request.FILES[qid]},
+                    )
+            else:
+                data[qid] = request.POST.get(qid, '')
+        response.data = data
+        response.updated_by = request.user
+        response.save()
+        log_activity(request.user, f"Updated the Self-Evaluation Record for {school.name}", school=school)
+        messages.success(request, "Self-Evaluation Record saved.")
+        return redirect('self_evaluation_form')
+
+    existing_files = {f.question_id: f for f in SelfEvaluationFile.objects.filter(review_cycle=review_cycle)}
+
+    return render(request, 'tenants/self_evaluation_form.html', {
+        'school': school,
+        'review_cycle': review_cycle,
+        'parts': grouped_questions(),
+        'response_data': response.data,
+        'existing_files': existing_files,
+        'read_only': False,
+    })
 
 
 @login_required

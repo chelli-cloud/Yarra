@@ -109,9 +109,15 @@
             <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
                 <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Self Study Details</div>
                 <div style="padding: 32px;">
+                    {% if can_edit_review %}
+                    <div class="message success" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+                        <span>📝 Fill out the full Self-Evaluation Record directly in Yarra -- your Yarra Evaluator will see your answers here as you save them.</span>
+                        <a href="{% url 'self_evaluation_form' %}" class="button primary">Open Self-Evaluation Record</a>
+                    </div>
+                    {% endif %}
                     <div class="message info" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-                        <span>📋 Fill out the Self-Evaluation Record on Google Forms (see Purpose &amp; Guidelines above), then upload a copy of your responses below so your Yarra Evaluator can review it here.</span>
-                        <a href="{{ self_study_questionnaire_url }}" target="_blank" rel="noopener" class="button secondary">Open Self Study Questionnaire</a>
+                        <span>📋 The original Google Form is still available if you'd prefer to fill it out there first.</span>
+                        <a href="{{ self_study_questionnaire_url }}" target="_blank" rel="noopener" class="button secondary">Open Google Form</a>
                     </div>
                     <div class="grid two">
                         <div class="form-group">
