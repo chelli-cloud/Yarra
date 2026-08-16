@@ -304,13 +304,23 @@ PART_TITLES = {
 
 QUESTIONS_BY_ID = {q['id']: q for q in QUESTIONS}
 
+PART_SUMMARY = [
+    ('A', 'School Profile & Data', 'Basic school information, structure, staff, students, and systems.'),
+    ('B', 'Institutional Capability Review', '5 capability areas rated against Yarra\'s scoring guide.'),
+    ('C', 'Supporting Evidence', 'Upload documents that illustrate current practice.'),
+    ('D', 'School Priorities & Improvement', 'The most important section -- your priorities for the year ahead.'),
+]
 
-def grouped_questions():
-    """Groups QUESTIONS into Part -> Section -> Subsection -> [questions], preserving order."""
+
+def grouped_questions(part_filter=None):
+    """Groups QUESTIONS into Part -> Section -> Subsection -> [questions], preserving order.
+    Pass part_filter ('A'/'B'/'C'/'D') to build the structure for a single part only."""
     parts = []
     part_index = {}
     for q in QUESTIONS:
         part_key = q['part']
+        if part_filter and part_key != part_filter:
+            continue
         if part_key not in part_index:
             part_index[part_key] = {'key': part_key, 'title': PART_TITLES[part_key], 'sections': [], '_section_index': {}}
             parts.append(part_index[part_key])
@@ -332,3 +342,18 @@ def grouped_questions():
                 section['subsections'].append(section['_flat'])
             section['_flat']['questions'].append(q)
     return parts
+
+
+def is_answered(question, response_data, existing_files):
+    """Whether a question has any saved answer -- used to compute per-part progress."""
+    if question['type'] == 'file':
+        return question['id'] in existing_files
+    value = response_data.get(question['id'])
+    return bool(value)
+
+
+def part_progress(part_key, response_data, existing_files):
+    """Returns (answered_count, total_count) for a part, counting required questions only."""
+    part_questions = [q for q in QUESTIONS if q['part'] == part_key and q.get('required')]
+    answered = sum(1 for q in part_questions if is_answered(q, response_data, existing_files))
+    return answered, len(part_questions)

@@ -1,28 +1,26 @@
 {% extends 'base.html' %}
 
-{% block title %}Self-Evaluation Record | {{ school.name }} | Yarra{% endblock %}
+{% block title %}Part {{ part_key }}: {{ part_title }} | Self-Evaluation Record | Yarra{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
-        <h1>Yarra School Self-Evaluation Record</h1>
+        <h1>Part {{ part_key }}: {{ part_title }}</h1>
         <p class="muted">{{ school.name }} · {{ review_cycle.title }}</p>
     </div>
     <a href="{% url 'review_dashboard' %}" class="button secondary">Back to School Review</a>
 </div>
 
-{% include 'tenants/_self_evaluation_purpose.html' %}
-
 <div class="message info" style="margin-bottom: 24px;">
-    <span>💾</span> You can save partial progress at any time and come back to finish later. Fields marked * are part of the official record.
+    <span>💾</span> You don't need to finish this section in one sitting -- save whatever you've filled in, and pick up where you left off later. Fields marked * are part of the official record.
 </div>
 
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data" action="{% url 'self_evaluation_form' %}?part={{ part_key }}">
     {% csrf_token %}
     {% include 'tenants/_self_evaluation_questions.html' %}
 
     <div style="display: flex; justify-content: flex-end; position: sticky; bottom: 32px; z-index: 10;">
-        <button type="submit" class="button primary" style="padding: 16px 48px; box-shadow: var(--shadow-lg);">Save Self-Evaluation Record</button>
+        <button type="submit" class="button primary" style="padding: 16px 48px; box-shadow: var(--shadow-lg);">Save Part {{ part_key }}</button>
     </div>
 </form>
 {% endblock %}

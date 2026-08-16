@@ -466,7 +466,7 @@
                 <a href="{% url 'school_profile' %}" class="nav-link">
                     <span class="nav-icon">🏫</span> School Profile
                 </a>
-                {% if user_profile.role != 'student' %}
+                {% if user_profile.role == 'school_leader' or user_profile.role == 'admin' %}
                     <a href="{% url 'review_dashboard' %}" class="nav-link">
                         <span class="nav-icon">📊</span> Reviews
                     </a>

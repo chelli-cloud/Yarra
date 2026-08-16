@@ -6,7 +6,7 @@
 <div class="page-header">
     <div>
         <h1>Yarra Evaluator</h1>
-        <p class="muted">Review cycles and Self Study Questionnaires across every Yarra school.</p>
+        <p class="muted">Self-Evaluation Records across every Yarra school.</p>
     </div>
 </div>
 
@@ -16,20 +16,18 @@
             <thead>
                 <tr>
                     <th>School</th>
-                    <th>Latest Review Cycle</th>
-                    <th>Self Study Status</th>
+                    <th>Completion</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                {% for school, cycle in rows %}
+                {% for school, cycle, answered, total in rows %}
                 <tr>
                     <td>{{ school.name }}</td>
-                    <td>{{ cycle.title|default:"—" }}</td>
                     <td>
-                        {% if cycle %}
-                        <span class="badge {% if cycle.self_study_status == 'completed' %}success{% elif cycle.self_study_status == 'in_progress' %}warning{% else %}info{% endif %}">
-                            {{ cycle.get_self_study_status_display }}
+                        {% if total %}
+                        <span class="badge {% if answered == total %}success{% elif answered > 0 %}warning{% else %}info{% endif %}">
+                            {{ answered }} / {{ total }} answered
                         </span>
                         {% else %}
                         <span class="muted">—</span>
@@ -40,7 +38,7 @@
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="4" style="text-align: center; padding: 32px;"><p class="muted">No review cycles yet.</p></td></tr>
+                <tr><td colspan="3" style="text-align: center; padding: 32px;"><p class="muted">No Self-Evaluation Records started yet.</p></td></tr>
                 {% endfor %}
             </tbody>
         </table>

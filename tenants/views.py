@@ -11,14 +11,13 @@ from .models import (
     Notification, Invitation, SchoolProfileExtended, SchoolDocument, Payment, ActivityLog,
     YarraEvaluator, EvaluatorQuery, SelfEvaluationResponse, SelfEvaluationFile,
 )
-from .self_evaluation import QUESTIONS, grouped_questions
+from .self_evaluation import QUESTIONS, grouped_questions, part_progress, PART_SUMMARY, PART_TITLES
 from .forms import (
     InvitationForm, SchoolRegistrationForm, UserRegistrationForm,
     SchoolCreateForm, SchoolProfileExtendedForm, PaymentForm,
 )
 from .notifications import log_activity, create_notification
 from django.utils import timezone
-from django.conf import settings
 import secrets
 
 REVIEW_STATUS_DISPLAY = {
@@ -28,7 +27,6 @@ REVIEW_STATUS_DISPLAY = {
 }
 
 PROFILE_EDIT_ROLES = ['school_leader', 'admin']
-REVIEW_CYCLE_CREATE_ROLES = ['school_leader', 'admin']
 REVIEW_EDIT_ROLES = ['school_leader', 'admin']
 LEADERSHIP_ROLES = ['school_leader', 'admin']
 MAX_ADMINS_PER_SCHOOL = 2
@@ -203,83 +201,74 @@ def school_network(request):
 
 @login_required
 def review_dashboard(request):
+    """School Review: the Self-Evaluation Record overview. Restricted to School
+    Leader/Admin -- not available to Teachers, per Ms Chelli's instruction."""
     profile = get_object_or_404(Profile, user=request.user)
-    if profile.role == 'student':
-        return render(request, 'tenants/access_denied.html', {'message': 'Students do not have access to school review information.'}, status=403)
+    if profile.role not in REVIEW_EDIT_ROLES:
+        return render(request, 'tenants/access_denied.html', {
+            'message': 'School Review is only available to School Leaders and Admins.'
+        }, status=403)
 
     school = profile.school
-    cycle_id = request.GET.get('cycle_id')
-    review_cycles = ReviewCycle.objects.filter(school=school).order_by('-created_at')
-    active_cycle = review_cycles.first()
-    selected_cycle = get_object_or_404(review_cycles, pk=cycle_id) if cycle_id else active_cycle
+    review_cycle, _ = ReviewCycle.objects.get_or_create(
+        school=school, defaults={'title': 'Self-Evaluation Record'}
+    )
 
-    can_edit_review = profile.role in REVIEW_EDIT_ROLES
-    can_create_cycle = profile.role in REVIEW_CYCLE_CREATE_ROLES
-    is_archived_selection = selected_cycle is not None and active_cycle is not None and selected_cycle.pk != active_cycle.pk
+    response = SelfEvaluationResponse.objects.filter(review_cycle=review_cycle).first()
+    response_data = response.data if response else {}
+    existing_file_ids = set(SelfEvaluationFile.objects.filter(review_cycle=review_cycle).values_list('question_id', flat=True))
 
-    if request.method == 'POST' and selected_cycle and can_edit_review and not is_archived_selection:
-        selected_cycle.self_study_status = request.POST.get('self_study_status')
-        selected_cycle.self_study_start = request.POST.get('self_study_start') or None
-        selected_cycle.self_study_end = request.POST.get('self_study_end') or None
-        if request.FILES.get('self_study_document'):
-            selected_cycle.self_study_document = request.FILES['self_study_document']
-        selected_cycle.review_visit_status = request.POST.get('review_visit_status')
-        selected_cycle.review_visit_start = request.POST.get('review_visit_start') or None
-        selected_cycle.review_visit_end = request.POST.get('review_visit_end') or None
-        if request.FILES.get('review_visit_document'):
-            selected_cycle.review_visit_document = request.FILES['review_visit_document']
-        selected_cycle.sip_status = request.POST.get('sip_status')
-        selected_cycle.sip_start = request.POST.get('sip_start') or None
-        selected_cycle.sip_end = request.POST.get('sip_end') or None
-        if request.FILES.get('sip_document'):
-            selected_cycle.sip_document = request.FILES['sip_document']
-        selected_cycle.recommendations_status = request.POST.get('recommendations_status')
-        selected_cycle.recommendations_start = request.POST.get('recommendations_start') or None
-        selected_cycle.recommendations_end = request.POST.get('recommendations_end') or None
-        if request.FILES.get('recommendations_document'):
-            selected_cycle.recommendations_document = request.FILES['recommendations_document']
-        selected_cycle.save()
-        return redirect('review_dashboard')
+    part_progress_list = []
+    for key, title, description in PART_SUMMARY:
+        answered, total = part_progress(key, response_data, existing_file_ids)
+        part_progress_list.append({
+            'key': key, 'title': title, 'description': description,
+            'answered': answered, 'total': total,
+            'complete': total > 0 and answered == total,
+        })
 
-    evaluator_queries = EvaluatorQuery.objects.filter(review_cycle=selected_cycle).select_related('evaluator') if selected_cycle else []
+    evaluator_queries = EvaluatorQuery.objects.filter(review_cycle=review_cycle).select_related('evaluator')
 
     return render(request, 'tenants/review_dashboard.html', {
         'school': school,
-        'review_cycle': selected_cycle,
-        'active_cycle': active_cycle,
-        'archived_cycles': review_cycles[1:] if active_cycle else [],
-        'can_edit_review': can_edit_review,
-        'can_create_cycle': can_create_cycle,
-        'is_archived_selection': is_archived_selection,
-        'selected_cycle_is_active': selected_cycle is not None and active_cycle is not None and selected_cycle.pk == active_cycle.pk,
-        'review_status_choices': ReviewCycle._meta.get_field('self_study_status').choices,
+        'review_cycle': review_cycle,
+        'part_progress_list': part_progress_list,
         'evaluator_queries': evaluator_queries,
-        'can_answer_queries': profile.role in PROFILE_EDIT_ROLES,
-        'self_study_questionnaire_url': settings.SELF_STUDY_QUESTIONNAIRE_URL,
+        'can_answer_queries': True,
     })
 
 
 @login_required
 def evaluator_dashboard(request):
-    """Yarra Evaluator: cross-school list of review cycles and their Self Study Questionnaires."""
+    """Yarra Evaluator: cross-school list of Self-Evaluation Records and their completion."""
     if not hasattr(request.user, 'yarraevaluator'):
         return render(request, 'tenants/access_denied.html', {
             'message': 'This area is only available to Yarra Evaluators.'
         }, status=403)
 
     schools = School.objects.filter(review_cycles__isnull=False).distinct().order_by('name')
-    latest_cycles = {
-        rc.school_id: rc for rc in ReviewCycle.objects.filter(school__in=schools).order_by('school_id', '-created_at')
-    }
+    cycles = {rc.school_id: rc for rc in ReviewCycle.objects.filter(school__in=schools).order_by('school_id', '-created_at')}
+    responses = {r.review_cycle_id: r for r in SelfEvaluationResponse.objects.filter(review_cycle__in=cycles.values())}
+    file_ids_by_cycle = {}
+    for f in SelfEvaluationFile.objects.filter(review_cycle__in=cycles.values()):
+        file_ids_by_cycle.setdefault(f.review_cycle_id, set()).add(f.question_id)
 
-    return render(request, 'tenants/evaluator_dashboard.html', {
-        'rows': [(school, latest_cycles.get(school.pk)) for school in schools],
-    })
+    rows = []
+    for school in schools:
+        cycle = cycles.get(school.pk)
+        response = responses.get(cycle.pk) if cycle else None
+        response_data = response.data if response else {}
+        existing_file_ids = file_ids_by_cycle.get(cycle.pk, set()) if cycle else set()
+        answered_total = sum(part_progress(key, response_data, existing_file_ids)[0] for key, _, _ in PART_SUMMARY)
+        required_total = sum(part_progress(key, response_data, existing_file_ids)[1] for key, _, _ in PART_SUMMARY)
+        rows.append((school, cycle, answered_total, required_total))
+
+    return render(request, 'tenants/evaluator_dashboard.html', {'rows': rows})
 
 
 @login_required
 def evaluator_review_detail(request, school_pk):
-    """Yarra Evaluator: view a school's Self Study Questionnaire and ask a follow-up question."""
+    """Yarra Evaluator: view a school's Self-Evaluation Record and ask a follow-up question."""
     if not hasattr(request.user, 'yarraevaluator'):
         return render(request, 'tenants/access_denied.html', {
             'message': 'This area is only available to Yarra Evaluators.'
@@ -300,7 +289,7 @@ def evaluator_review_detail(request, school_pk):
                 create_notification(
                     recipient=recipient,
                     title='Yarra Evaluator question',
-                    message=f"A Yarra Evaluator asked a question about your Self Study Questionnaire: \"{question[:120]}\"",
+                    message=f"A Yarra Evaluator asked a question about your Self-Evaluation Record: \"{question[:120]}\"",
                     level='info',
                     target_url=reverse('review_dashboard'),
                     data={'evaluator_query_id': query.pk},
@@ -310,15 +299,22 @@ def evaluator_review_detail(request, school_pk):
 
     queries = EvaluatorQuery.objects.filter(review_cycle=review_cycle) if review_cycle else []
     response = SelfEvaluationResponse.objects.filter(review_cycle=review_cycle).first() if review_cycle else None
+    response_data = response.data if response else {}
     existing_files = {f.question_id: f for f in SelfEvaluationFile.objects.filter(review_cycle=review_cycle)} if review_cycle else {}
+    existing_file_ids = set(existing_files.keys())
+
+    part_progress_list = [
+        {'key': key, 'title': title, 'answered': part_progress(key, response_data, existing_file_ids)[0], 'total': part_progress(key, response_data, existing_file_ids)[1]}
+        for key, title, _ in PART_SUMMARY
+    ] if review_cycle else []
 
     return render(request, 'tenants/evaluator_review_detail.html', {
         'school': school,
         'review_cycle': review_cycle,
         'queries': queries,
-        'self_study_questionnaire_url': settings.SELF_STUDY_QUESTIONNAIRE_URL,
+        'part_progress_list': part_progress_list,
         'parts': grouped_questions() if review_cycle else [],
-        'response_data': response.data if response else {},
+        'response_data': response_data,
         'existing_files': existing_files,
         'read_only': True,
     })
@@ -614,44 +610,34 @@ def download_payment_invoice(request, pk):
 
 
 @login_required
-def create_review_cycle(request):
-    profile = get_object_or_404(Profile, user=request.user)
-    if profile.role not in REVIEW_CYCLE_CREATE_ROLES:
-        return render(request, 'tenants/access_denied.html', {'message': 'Only School Leaders and Admins can create new review cycles.'})
-    if request.method == 'POST':
-        review_cycle = ReviewCycle.objects.create(
-            school=profile.school,
-            title=request.POST.get('title', 'Review Cycle'),
-            start_date=request.POST.get('start_date') or None,
-            end_date=request.POST.get('end_date') or None,
-        )
-        return redirect(f"{reverse('review_dashboard')}?cycle_id={review_cycle.pk}")
-    return render(request, 'tenants/review_cycle_form.html', {'school': profile.school})
-
-
-@login_required
 def self_evaluation_form(request):
-    """Fill out the Yarra School Self-Evaluation Record for the school's active review
-    cycle. Restricted to School Leader/Admin -- explicitly not available to Teachers,
-    per Ms Chelli's instruction that this content is more sensitive than the general
-    review-cycle status tracking on the School Review page."""
+    """Fill out one Part of the Yarra School Self-Evaluation Record at a time
+    (?part=A/B/C/D) -- the record is ~170 questions, too many to fill in one
+    sitting, so each Part saves independently and School Review shows progress
+    per Part. Restricted to School Leader/Admin -- explicitly not available to
+    Teachers, per Ms Chelli's instruction."""
     profile = get_object_or_404(Profile, user=request.user)
     if profile.role not in REVIEW_EDIT_ROLES:
         return render(request, 'tenants/access_denied.html', {
             'message': 'The Self-Evaluation Record is only available to School Leaders and Admins.'
         }, status=403)
 
-    school = profile.school
-    review_cycle = ReviewCycle.objects.filter(school=school).order_by('-created_at').first()
-    if not review_cycle:
-        messages.error(request, "Create a review cycle before starting the Self-Evaluation Record.")
+    part_key = request.GET.get('part') or request.POST.get('part')
+    if part_key not in PART_TITLES:
+        messages.error(request, "Choose a section of the Self-Evaluation Record to fill out.")
         return redirect('review_dashboard')
 
+    school = profile.school
+    review_cycle, _ = ReviewCycle.objects.get_or_create(
+        school=school, defaults={'title': 'Self-Evaluation Record'}
+    )
     response, _ = SelfEvaluationResponse.objects.get_or_create(review_cycle=review_cycle)
 
     if request.method == 'POST':
         data = dict(response.data)
         for q in QUESTIONS:
+            if q['part'] != part_key:
+                continue
             qid = q['id']
             if q['type'] == 'checkbox':
                 data[qid] = request.POST.getlist(qid)
@@ -666,16 +652,18 @@ def self_evaluation_form(request):
         response.data = data
         response.updated_by = request.user
         response.save()
-        log_activity(request.user, f"Updated the Self-Evaluation Record for {school.name}", school=school)
-        messages.success(request, "Self-Evaluation Record saved.")
-        return redirect('self_evaluation_form')
+        log_activity(request.user, f"Updated Part {part_key} of the Self-Evaluation Record for {school.name}", school=school)
+        messages.success(request, f"{PART_TITLES[part_key]} saved. You can come back and fill out the rest anytime.")
+        return redirect('review_dashboard')
 
     existing_files = {f.question_id: f for f in SelfEvaluationFile.objects.filter(review_cycle=review_cycle)}
 
     return render(request, 'tenants/self_evaluation_form.html', {
         'school': school,
         'review_cycle': review_cycle,
-        'parts': grouped_questions(),
+        'part_key': part_key,
+        'part_title': PART_TITLES[part_key],
+        'parts': grouped_questions(part_filter=part_key),
         'response_data': response.data,
         'existing_files': existing_files,
         'read_only': False,

@@ -1,289 +1,62 @@
 {% extends 'base.html' %}
 
-{% block title %}School Review Dashboard | Yarra{% endblock %}
+{% block title %}School Review | Yarra{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
-        <h1>Review Dashboard</h1>
-        <p class="muted">Track review progress across Self Study, Review Visit, SIP, and Recommendations.</p>
+        <h1>School Review</h1>
+        <p class="muted">{{ school.name }} · Yarra School Self-Evaluation Record</p>
     </div>
-    {% if can_create_cycle %}
-        <a href="{% url 'create_review_cycle' %}" class="button primary">Create Review Cycle</a>
-    {% endif %}
 </div>
 
-{% if not review_cycle %}
-    <div class="card" style="text-align: center; padding: 60px 20px;">
-        <div style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;">📋</div>
-        <h2>No Review Cycle Found</h2>
-        <p class="muted" style="max-width: 400px; margin: 0 auto 32px;">No review cycle exists yet for this school. Use "Create Review Cycle" to start the first cycle.</p>
-        {% if can_create_cycle %}
-            <a href="{% url 'create_review_cycle' %}" class="button primary">Start First Cycle</a>
-        {% endif %}
-    </div>
-{% else %}
-    <div class="card" style="margin-bottom: 32px;">
-        <div class="page-header" style="margin-bottom: 24px;">
-            <div>
-                <h2>{{ review_cycle.title }}</h2>
-                <p class="muted">
-                    {% if selected_cycle_is_active %}
-                        <span class="badge success">Active</span>
-                    {% else %}
-                        <span class="badge info">Archived</span>
-                    {% endif %}
-                    {% if review_cycle.start_date or review_cycle.end_date %}
-                        • {{ review_cycle.start_date|default:"No start date" }} to {{ review_cycle.end_date|default:"No end date" }}
-                    {% endif %}
-                </p>
-            </div>
-        </div>
+{% include 'tenants/_self_evaluation_purpose.html' %}
 
-        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
-            <!-- Self Study -->
-            <div class="card" style="padding: 20px; border-color: {% if review_cycle.self_study_status == 'completed' %}#22c55e{% elif review_cycle.self_study_status == 'in_progress' %}#fbbf24{% else %}var(--border){% endif %}; background: {% if review_cycle.self_study_status == 'completed' %}#f0fdf4{% elif review_cycle.self_study_status == 'in_progress' %}#fffbeb{% else %}var(--white){% endif %};">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                    <span class="badge {% if review_cycle.self_study_status == 'completed' %}success{% elif review_cycle.self_study_status == 'in_progress' %}warning{% else %}info{% endif %}">
-                        {{ review_cycle.get_self_study_status_display }}
-                    </span>
-                </div>
-                <h3 style="font-size: 1.1rem; margin-bottom: 4px;">Self Study</h3>
-                <p class="muted" style="font-size: 0.85rem;">Self Study Report Stage</p>
-            </div>
-
-            <!-- Review Visit -->
-            <div class="card" style="padding: 20px; border-color: {% if review_cycle.review_visit_status == 'completed' %}#22c55e{% elif review_cycle.review_visit_status == 'in_progress' %}#fbbf24{% else %}var(--border){% endif %}; background: {% if review_cycle.review_visit_status == 'completed' %}#f0fdf4{% elif review_cycle.review_visit_status == 'in_progress' %}#fffbeb{% else %}var(--white){% endif %};">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                    <span class="badge {% if review_cycle.review_visit_status == 'completed' %}success{% elif review_cycle.review_visit_status == 'in_progress' %}warning{% else %}info{% endif %}">
-                        {{ review_cycle.get_review_visit_status_display }}
-                    </span>
-                </div>
-                <h3 style="font-size: 1.1rem; margin-bottom: 4px;">Review Visit</h3>
-                <p class="muted" style="font-size: 0.85rem;">External/Internal Visit Stage</p>
-            </div>
-
-            <!-- SIP -->
-            <div class="card" style="padding: 20px; border-color: {% if review_cycle.sip_status == 'completed' %}#22c55e{% elif review_cycle.sip_status == 'in_progress' %}#fbbf24{% else %}var(--border){% endif %}; background: {% if review_cycle.sip_status == 'completed' %}#f0fdf4{% elif review_cycle.sip_status == 'in_progress' %}#fffbeb{% else %}var(--white){% endif %};">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                    <span class="badge {% if review_cycle.sip_status == 'completed' %}success{% elif review_cycle.sip_status == 'in_progress' %}warning{% else %}info{% endif %}">
-                        {{ review_cycle.get_sip_status_display }}
-                    </span>
-                </div>
-                <h3 style="font-size: 1.1rem; margin-bottom: 4px;">SIP Preparation</h3>
-                <p class="muted" style="font-size: 0.85rem;">School Improvement Plan Stage</p>
-            </div>
-
-            <!-- Recommendations -->
-            <div class="card" style="padding: 20px; border-color: {% if review_cycle.recommendations_status == 'completed' %}#22c55e{% elif review_cycle.recommendations_status == 'in_progress' %}#fbbf24{% else %}var(--border){% endif %}; background: {% if review_cycle.recommendations_status == 'completed' %}#f0fdf4{% elif review_cycle.recommendations_status == 'in_progress' %}#fffbeb{% else %}var(--white){% endif %};">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                    <span class="badge {% if review_cycle.recommendations_status == 'completed' %}success{% elif review_cycle.recommendations_status == 'in_progress' %}warning{% else %}info{% endif %}">
-                        {{ review_cycle.get_recommendations_status_display }}
-                    </span>
-                </div>
-                <h3 style="font-size: 1.1rem; margin-bottom: 4px;">Recommendations</h3>
-                <p class="muted" style="font-size: 0.85rem;">Final Report & Recommendations</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2 style="margin-bottom: 24px;">Review Details</h2>
-
-        {% include 'tenants/_self_evaluation_purpose.html' %}
-
-        {% if is_archived_selection %}
-            <div class="message info" style="margin-bottom: 32px;">
-                <span>ℹ️</span> Archived cycles are view-only so historical records stay unchanged.
-            </div>
-        {% elif can_edit_review %}
-            <p class="muted" style="margin-bottom: 32px;">
-                You can update the active review cycle.
-            </p>
-        {% endif %}
-
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <!-- Self Study Section -->
-            <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
-                <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Self Study Details</div>
-                <div style="padding: 32px;">
-                    {% if can_edit_review %}
-                    <div class="message success" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-                        <span>📝 Fill out the full Self-Evaluation Record directly in Yarra -- your Yarra Evaluator will see your answers here as you save them.</span>
-                        <a href="{% url 'self_evaluation_form' %}" class="button primary">Open Self-Evaluation Record</a>
-                    </div>
-                    {% endif %}
-                    <div class="message info" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-                        <span>📋 The original Google Form is still available if you'd prefer to fill it out there first.</span>
-                        <a href="{{ self_study_questionnaire_url }}" target="_blank" rel="noopener" class="button secondary">Open Google Form</a>
-                    </div>
-                    <div class="grid two">
-                        <div class="form-group">
-                            <label class="label">Current Status</label>
-                            <select name="self_study_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                                {% for val, label in review_status_choices %}
-                                <option value="{{ val }}" {% if review_cycle.self_study_status == val %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Start Date</label>
-                            <input class="input" type="date" name="self_study_start" value="{{ review_cycle.self_study_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">End Date</label>
-                            <input class="input" type="date" name="self_study_end" value="{{ review_cycle.self_study_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Upload Completed Questionnaire</label>
-                            <input type="file" name="self_study_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="width: 100%;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Review Visit Section -->
-            <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
-                <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Review Visit Details</div>
-                <div style="padding: 32px;">
-                    <div class="grid two">
-                        <div class="form-group">
-                            <label class="label">Current Status</label>
-                            <select name="review_visit_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                                {% for val, label in review_status_choices %}
-                                <option value="{{ val }}" {% if review_cycle.review_visit_status == val %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Start Date</label>
-                            <input class="input" type="date" name="review_visit_start" value="{{ review_cycle.review_visit_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">End Date</label>
-                            <input class="input" type="date" name="review_visit_end" value="{{ review_cycle.review_visit_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Upload Supporting Document</label>
-                            <input type="file" name="review_visit_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="width: 100%;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SIP Section -->
-            <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
-                <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">SIP Preparation Details</div>
-                <div style="padding: 32px;">
-                    <div class="grid two">
-                        <div class="form-group">
-                            <label class="label">Current Status</label>
-                            <select name="sip_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                                {% for val, label in review_status_choices %}
-                                <option value="{{ val }}" {% if review_cycle.sip_status == val %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Start Date</label>
-                            <input class="input" type="date" name="sip_start" value="{{ review_cycle.sip_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">End Date</label>
-                            <input class="input" type="date" name="sip_end" value="{{ review_cycle.sip_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Upload Supporting Document</label>
-                            <input type="file" name="sip_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="width: 100%;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recommendations Section -->
-            <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
-                <div style="padding: 16px 24px; background: var(--bg-body); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Recommendations Details</div>
-                <div style="padding: 32px;">
-                    <div class="grid two">
-                        <div class="form-group">
-                            <label class="label">Current Status</label>
-                            <select name="recommendations_status" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                                {% for val, label in review_status_choices %}
-                                <option value="{{ val }}" {% if review_cycle.recommendations_status == val %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Start Date</label>
-                            <input class="input" type="date" name="recommendations_start" value="{{ review_cycle.recommendations_start|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">End Date</label>
-                            <input class="input" type="date" name="recommendations_end" value="{{ review_cycle.recommendations_end|date:'Y-m-d' }}" {% if not can_edit_review or is_archived_selection %}disabled{% endif %}>
-                        </div>
-                        <div class="form-group">
-                            <label class="label">Upload Supporting Document</label>
-                            <input type="file" name="recommendations_document" {% if not can_edit_review or is_archived_selection %}disabled{% endif %} style="width: 100%;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {% if can_edit_review and not is_archived_selection %}
-                <div style="display: flex; justify-content: flex-end; position: sticky; bottom: 32px; z-index: 10;">
-                    <button type="submit" class="button primary" style="padding: 16px 48px; box-shadow: var(--shadow-lg);">Save Review Updates</button>
-                </div>
+<div class="grid two" style="gap: 20px;">
+    {% for part in part_progress_list %}
+    <div class="card" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px; margin-bottom: 8px;">
+            <h3 style="margin: 0;">Part {{ part.key }}: {{ part.title }}</h3>
+            {% if part.complete %}
+                <span class="badge success">Complete</span>
+            {% elif part.answered > 0 %}
+                <span class="badge warning">In Progress</span>
+            {% else %}
+                <span class="badge info">Not Started</span>
             {% endif %}
-        </form>
+        </div>
+        <p class="muted" style="font-size: 0.9rem; margin-bottom: 16px;">{{ part.description }}</p>
+        <p class="muted" style="font-size: 0.85rem; margin-bottom: 16px;">{{ part.answered }} of {{ part.total }} required questions answered</p>
+        <a href="{% url 'self_evaluation_form' %}?part={{ part.key }}" class="button {% if part.answered > 0 %}secondary{% else %}primary{% endif %}" style="width: 100%;">
+            {% if part.complete %}Review{% elif part.answered > 0 %}Continue{% else %}Start{% endif %}
+        </a>
     </div>
+    {% endfor %}
+</div>
 
-    {% if evaluator_queries %}
-        <div class="card" style="margin-top: 32px;">
-            <h2 style="margin-bottom: 20px;">Yarra Evaluator Questions</h2>
-            <p class="muted" style="margin-bottom: 24px;">Follow-up questions about your Self Study Questionnaire.</p>
-            {% for query in evaluator_queries %}
-                <div style="padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 16px;">
-                    <p><strong>Q:</strong> {{ query.question }}</p>
-                    <p class="muted" style="font-size: 0.8rem;">Asked {{ query.created_at|date:"M d, Y H:i" }}</p>
-                    {% if query.answer or query.response_document %}
-                        <p style="margin-top: 12px;"><strong>A:</strong> {{ query.answer|default:"(no text, see attached document)" }}</p>
-                        {% if query.response_document %}
-                            <p><a href="{{ query.response_document.url }}">View attached document</a></p>
-                        {% endif %}
-                    {% elif can_answer_queries %}
-                        <form method="post" action="{% url 'evaluator_answer_query' query.pk %}" enctype="multipart/form-data" style="margin-top: 12px;">
-                            {% csrf_token %}
-                            <textarea name="answer" rows="3" placeholder="Your answer"></textarea>
-                            <input type="file" name="response_document" style="margin-top: 8px;">
-                            <button type="submit" class="button secondary" style="margin-top: 8px;">Send Response</button>
-                        </form>
-                    {% else %}
-                        <p class="muted">Awaiting a response from your School Admin.</p>
-                    {% endif %}
-                </div>
-            {% endfor %}
+{% if evaluator_queries %}
+<div class="card" style="margin-top: 24px;">
+    <h2 style="margin-bottom: 20px;">Yarra Evaluator Questions</h2>
+    <p class="muted" style="margin-bottom: 24px;">Follow-up questions about your Self-Evaluation Record.</p>
+    {% for query in evaluator_queries %}
+        <div style="padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 16px;">
+            <p><strong>Q:</strong> {{ query.question }}</p>
+            <p class="muted" style="font-size: 0.8rem;">Asked {{ query.created_at|date:"M d, Y H:i" }}</p>
+            {% if query.answer or query.response_document %}
+                <p style="margin-top: 12px;"><strong>A:</strong> {{ query.answer|default:"(no text, see attached document)" }}</p>
+                {% if query.response_document %}
+                    <p><a href="{{ query.response_document.url }}">View attached document</a></p>
+                {% endif %}
+            {% else %}
+                <form method="post" action="{% url 'evaluator_answer_query' query.pk %}" enctype="multipart/form-data" style="margin-top: 12px;">
+                    {% csrf_token %}
+                    <textarea name="answer" rows="3" placeholder="Your answer"></textarea>
+                    <input type="file" name="response_document" style="margin-top: 8px;">
+                    <button type="submit" class="button secondary" style="margin-top: 8px;">Send Response</button>
+                </form>
+            {% endif %}
         </div>
-    {% endif %}
-
-    {% if archived_cycles %}
-        <div class="card" style="margin-top: 32px;">
-            <h2 style="margin-bottom: 20px;">Past Review Archive</h2>
-            <p class="muted" style="margin-bottom: 24px;">View previous review cycles and their historical records.</p>
-            
-            <div class="grid two">
-                {% for cycle in archived_cycles %}
-                    <div style="padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong style="display: block; margin-bottom: 4px;">{{ cycle.title }}</strong>
-                            <span class="muted" style="font-size: 0.85rem;">{{ cycle.start_date|date:"M Y" }} - {{ cycle.end_date|date:"M Y" }}</span>
-                        </div>
-                        <a href="{% url 'review_dashboard' %}?cycle_id={{ cycle.pk }}" class="button secondary" style="font-size: 0.85rem;">View Archive</a>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
+    {% endfor %}
+</div>
 {% endif %}
 {% endblock %}

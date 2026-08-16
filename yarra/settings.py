@@ -171,14 +171,6 @@ RAZORPAY_SECRET = os.getenv('RAZORPAY_SECRET', '')  # Set in your environment
 RAZORPAY_WEBHOOK_SECRET = os.getenv('RAZORPAY_WEBHOOK_SECRET', '')  # Set in your environment
 COMPETITION_REGISTRATION_FEE = int(os.getenv('COMPETITION_REGISTRATION_FEE', '500'))
 
-# Self Study Questionnaire: schools fill this out on the external Google Form
-# (Yarra's official questionnaire, not reproduced in-app); the school can still
-# upload a supporting document below for the Yarra Evaluator to view in-app.
-SELF_STUDY_QUESTIONNAIRE_URL = os.getenv(
-    'SELF_STUDY_QUESTIONNAIRE_URL',
-    'https://docs.google.com/forms/d/e/1FAIpQLSeRckNWYZXOkKJgaAaXUqnqoZ1tjxr228iEpCIP3yjahp-JvA/viewform',
-)
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/

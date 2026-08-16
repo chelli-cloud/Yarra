@@ -6,7 +6,7 @@
 <div class="page-header">
     <div>
         <h1>{{ school.name }}</h1>
-        <p class="muted">Self Study Questionnaire and evaluator questions.</p>
+        <p class="muted">Self-Evaluation Record and evaluator questions.</p>
     </div>
     <a href="{% url 'evaluator_dashboard' %}" class="button secondary">Back to Evaluator Dashboard</a>
 </div>
@@ -15,18 +15,21 @@
 
 {% if not review_cycle %}
     <div class="card">
-        <p>This school has not started a review cycle yet.</p>
+        <p>This school has not started its Self-Evaluation Record yet.</p>
     </div>
 {% else %}
     <div class="card" style="margin-bottom: 24px;">
-        <h2>Self Study Questionnaire</h2>
-        <p><span class="badge {% if review_cycle.self_study_status == 'completed' %}success{% elif review_cycle.self_study_status == 'in_progress' %}warning{% else %}info{% endif %}">{{ review_cycle.get_self_study_status_display }}</span></p>
-        <p class="muted" style="margin-top: 8px;"><a href="{{ self_study_questionnaire_url }}" target="_blank" rel="noopener">View the official Self Study Questionnaire (Google Form)</a></p>
-        {% if review_cycle.self_study_document %}
-            <p style="margin-top: 12px;"><a href="{{ review_cycle.self_study_document.url }}" class="button secondary">View Self Study Document</a></p>
-        {% else %}
-            <p class="muted">No document uploaded yet.</p>
-        {% endif %}
+        <h2 style="margin-bottom: 16px;">Completion</h2>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            {% for part in part_progress_list %}
+            <div style="padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);">
+                <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 4px;">Part {{ part.key }}: {{ part.title }}</div>
+                <span class="badge {% if part.answered == part.total and part.total > 0 %}success{% elif part.answered > 0 %}warning{% else %}info{% endif %}">
+                    {{ part.answered }} / {{ part.total }} answered
+                </span>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 
     <div class="card">
