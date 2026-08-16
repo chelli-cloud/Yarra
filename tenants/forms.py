@@ -26,7 +26,7 @@ def _grade_field_name(level):
 
 
 class SchoolProfileExtendedForm(forms.ModelForm):
-    """Adds one required student-count field per grade level (Toddler through Grade 12,
+    """Adds one required student-count field per grade level (Pre KG through Grade 12,
     stored as SchoolProfileExtended.grade_strength) and validates the Mixed/Other
     curriculum 'specify' field, on top of the plain model fields."""
 

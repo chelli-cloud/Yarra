@@ -232,8 +232,8 @@ MODULES = [
         'workflow': [
             'View logo, location, contact person, membership tier, social links, achievements/highlights, leadership team, and (for the school\'s own staff) the assigned Yarra Coordinator\'s contact details.',
             'School Admin edits branding, contact details, and social links; uploads a logo.',
-            'The extended registration profile is organized into 5 sections: School Details (address, state, Grades & Number of Students table covering Toddler through Grade 12, fee range, principal contact), Curriculum Details (board dropdown with a "specify" field for Mixed/Other, annual planning description, assessment practices), Infrastructure Details, Teacher Professional Development, and School Vision (5-year vision, 2-5 year focus areas, key strengths).',
-            'Every grade level in the Grades & Number of Students table is mandatory -- the form will not save until all 16 counts are filled in.',
+            'The extended registration profile is organized into 5 sections: School Details (address, state, Grades & Number of Students table covering Pre KG through Grade 12, fee range, principal contact), Curriculum Details (board dropdown with a "specify" field for Mixed/Other, annual planning description, assessment practices), Infrastructure Details, Teacher Professional Development, and School Vision (5-year vision, 2-5 year focus areas, key strengths).',
+            'Every grade level in the Grades & Number of Students table is mandatory -- the form will not save until all 15 counts are filled in.',
             'Achievements and leadership team are entered as part of the extended profile and displayed on the school\'s page.',
             'Admin panel links out to Complete Extended Profile, Invite Staff, User Management, and Payment History.',
         ],

@@ -30,7 +30,7 @@ CURRICULUM_CHOICES = [
 ]
 
 GRADE_LEVELS = [
-    'Toddler', 'Nursery', 'LKG', 'UKG',
+    'Pre KG', 'LKG', 'UKG',
     'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
     'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12',
 ]
@@ -94,7 +94,7 @@ class SchoolProfileExtended(models.Model):
     pincode = models.CharField(max_length=10, blank=True)
     association = models.CharField(max_length=200, blank=True, help_text="Association the school is a part of")
     grades_offered = models.CharField(max_length=200, blank=True)
-    grade_strength = models.JSONField(default=dict, blank=True, help_text="Number of students per grade, Toddler through Grade 12")
+    grade_strength = models.JSONField(default=dict, blank=True, help_text="Number of students per grade, Pre KG through Grade 12")
     parent_demographics = models.TextField(blank=True)
     fee_structure_min = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Fee Structure (From)")
     fee_structure_max = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Fee Structure (To)")
